@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssRadixColors from "tailwindcss-radix-colors";
 
 const config: Config = {
   content: [
@@ -7,14 +8,16 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
+    container:{
+      padding: '2rem',
+      center: true,
+      screens: {
+        DEFAULT: '1128px',
+      }
     },
   },
-  plugins: [],
+  plugins: [
+    // tailwindcssRadixColors,
+  ],
 };
 export default config;
