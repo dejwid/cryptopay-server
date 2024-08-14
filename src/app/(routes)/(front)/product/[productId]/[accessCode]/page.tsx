@@ -19,7 +19,7 @@ export default async function ProductPage({params:{productId,accessCode}}:{param
         <div className="max-w-2xl flex flex-col gap-4 mx-auto p-4">
           <Heading>{product.name}</Heading>
           {product.uploads.length > 0 && product.uploads.map(upload => (
-            <div>
+            <div key={upload}>
               <Upload url={upload} />
             </div>
           ))}

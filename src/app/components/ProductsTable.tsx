@@ -18,7 +18,7 @@ export default function ProductsTable({products}:{products:Product[]}) {
         </Table.Header>
         <Table.Body>
           {products.map(p => (
-            <Table.Row>
+            <Table.Row key={p.id}>
               <Table.Cell>{p.name}</Table.Cell>
               <Table.Cell>{p.usdCents && `${p.usdCents/100} USD`}</Table.Cell>
               <Table.Cell>

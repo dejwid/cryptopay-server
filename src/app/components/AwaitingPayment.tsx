@@ -63,7 +63,7 @@ export default function AwaitingPayment({invoiceId,busyTo,isProduct}:{invoiceId:
           </div>
           {isProduct && (
             <div className="text-sm text-gray-600">
-              We'll email you the product link once the payment is confirmed
+              We&apos;ll email you the product link once the payment is confirmed
             </div>
           )}
           <Timer secondsLeft={secondsLeft} />

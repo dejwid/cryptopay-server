@@ -33,7 +33,7 @@ export default async function AddressesPage() {
             <Tabs.List>
               <Tabs.Trigger value="all">All ({addresses.length})</Tabs.Trigger>
               {addressesCoinTypes.map(coin => (
-                <Tabs.Trigger value={coin}>
+                <Tabs.Trigger value={coin} key={coin}>
                   {coin.toUpperCase()} ({addresses.filter(a => a.code === coin).length})
                 </Tabs.Trigger>
               ))}
@@ -42,7 +42,7 @@ export default async function AddressesPage() {
               <AddressesTable addresses={addresses} cryptoPrices={cryptoPrices} />
             </Tabs.Content>
             {addressesCoinTypes.map(coin => (
-              <Tabs.Content value={coin}>
+              <Tabs.Content value={coin} key={coin}>
                 <AddressesTable addresses={addresses.filter(a => a.code === coin)} cryptoPrices={cryptoPrices} />
               </Tabs.Content>
             ))}

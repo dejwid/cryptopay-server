@@ -21,7 +21,7 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
             const cryptoAmount = (address.lastBalance10pow10||0) / 10**10;
             const usdAmount = cryptoAmount === 0 ? 0 : cryptoAmount * cryptoPrices?.[address.code as CoinCode];
             return (
-              <Table.Row>
+              <Table.Row key={address.id}>
                 <Table.Cell>
                   {address.address}
                   &nbsp;{address.privateKey}

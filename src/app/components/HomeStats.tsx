@@ -23,7 +23,7 @@ export default async function HomeStats() {
         {sortBy(addresses, dataItem => supportedCoins.indexOf(dataItem.code)).map(data => {
           const balance10pow10 = (data._sum.lastBalance10pow10 || 0)/10**10
           return (
-            <div className="flex items-center bg-blue-50 p-4 rounded-md border border-blue-200">
+            <div key={data.code} className="flex items-center bg-blue-50 p-4 rounded-md border border-blue-200">
               <div>
                 {data.code === 'btc' && <BtcIcon className="size-10" />}
                 {data.code === 'bch' && <BchIcon className="size-10" />}
