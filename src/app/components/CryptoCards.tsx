@@ -4,7 +4,7 @@ import {CoinCode, CryptoPrices} from "@/libs/cryptoPrices";
 import {CheckboxCards, RadioCards} from "@radix-ui/themes";
 import {ReactNode} from "react";
 
-function CardContent({label,cryptoPrice,icon,symbol}:{label:string,cryptoPrice?:string;symbol:string;icon:ReactNode}) {
+function CardContent({label,cryptoPrice,icon,symbol}:{label:string,cryptoPrice?:string|number;symbol:string;icon:ReactNode}) {
   return (
     <div className="w-full flex gap-2 items-center">
       <div className="group-disabled:opacity-50">
