@@ -33,7 +33,7 @@ export async function saveInvoice(data:FormData) {
     return prisma.invoice.update({
       data:updateData,
       where: {
-        id: invoiceId,
+        id: invoice.id,
       },
     });
   } else {

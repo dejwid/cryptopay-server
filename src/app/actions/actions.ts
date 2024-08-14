@@ -7,7 +7,7 @@ import {CoinCode, getCryptoPrices} from "@/libs/cryptoPrices";
 import {prisma} from "@/libs/db";
 import {sendEmail} from "@/libs/mail";
 import {Address, Invoice, User} from "@prisma/client";
-import {addSeconds, isFuture, isPast} from "date-fns";
+import {addSeconds, isPast} from "date-fns";
 
 export async function getUser(): Promise<User|null> {
   const session = await auth();
@@ -28,8 +28,7 @@ export async function userEmailOrThrow(): Promise<string> {
 export async function addWalletAddressesAction(data: FormData) {
   const addresses = data.get('addresses') as string;
   const code = (data.get('code') as string).toLowerCase() as 'btc'|'bch'|'ltc'|'eth';
-  const userEmail = await getUserEmail();
-  if (!userEmail) throw 'error';
+  const userEmail = await userEmailOrThrow();
   for (let address of addresses.split("\n")) {
     if (address.length > 0) {
       const amount = await getCryptoBalance(code, address.toLowerCase(), 0);
@@ -177,7 +176,7 @@ export async function updateAddressBalanceAction(walletId: string) {
 }
 
 export async function archiveProductAction(productId:string) {
-  await prisma.product.update({ where:{id:productId}, data:{archivedAt:new Date} });
+  await prisma.product.update({ where:{id:productId,userEmail:await userEmailOrThrow()}, data:{archivedAt:new Date} });
 }
 
 export async function validateInvoicePayment(invoice:Invoice):Promise<Invoice> {
