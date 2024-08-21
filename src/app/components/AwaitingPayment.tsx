@@ -1,9 +1,9 @@
 'use client';
 import {Spinner} from "@radix-ui/themes";
 import axios from "axios";
-import {differenceInSeconds, formatDuration, intervalToDuration} from "date-fns";
+import {differenceInSeconds, intervalToDuration} from "date-fns";
 import {useRouter} from "next/navigation";
-import {useEffect, useRef, useState} from "react";
+import {useState} from "react";
 import useInterval from "use-interval";
 
 function Timer({secondsLeft}:{secondsLeft:number|null}) {
@@ -25,21 +25,21 @@ function Timer({secondsLeft}:{secondsLeft:number|null}) {
 }
 
 export default function AwaitingPayment({invoiceId,busyTo,isProduct}:{invoiceId:string,busyTo:Date,isProduct:boolean}) {
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
-  const intervalStartedRef = useRef<NodeJS.Timeout>();
   const [secondsLeft, setSecondsLeft] = useState<number|null>(null);
+  const [requestInProgress, setRequestInProgress] = useState(false);
   const router = useRouter();
 
   useInterval(() => {
-    if (document.hidden || !invoiceId) return;
+    if (document.hidden || !invoiceId || requestInProgress) return;
+    setRequestInProgress(true);
     axios.get(`/api/invoice/${invoiceId}/paid`).then(response => {
+      setRequestInProgress(false);
       if (response.data) {
-        intervalStartedRef.current && clearInterval(intervalStartedRef.current);
         console.log('paid -> ', response.data);
         router.refresh();
       }
     });
-  }, 10000);
+  }, 15 * 1000);
 
   useInterval(() => {
     if (document.hidden || !invoiceId) return;
