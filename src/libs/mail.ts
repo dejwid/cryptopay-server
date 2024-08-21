@@ -9,8 +9,8 @@ const mg = mailgun.client({
 
 export async function sendEmail(to:string[], subject:string, message:string) {
   return new Promise<void>((resolve, reject) => {
-    mg.messages.create('sandboxd16bb0eaf50047df978616f62dea1c13.mailgun.org', {
-      from: "CryptoPay Server <mailgun@sandboxd16bb0eaf50047df978616f62dea1c13.mailgun.org>",
+    mg.messages.create('cryptopayserver.com', {
+      from: "CryptoPay Server <no-reply@cryptopayserver.com>",
       to: to,
       subject: subject,
       text: message,
