@@ -33,6 +33,9 @@ export default function ProductsTable({products}:{products:Product[]}) {
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Content>
                     <DropdownMenu.Item>
+                      <Link href={'/product/'+p.id+'/0000'}>Preview</Link>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item>
                       <Link href={'/products/edit/'+p.id}>Edit</Link>
                     </DropdownMenu.Item>
                     <DropdownMenu.Item>
