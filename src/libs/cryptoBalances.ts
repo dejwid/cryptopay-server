@@ -1,19 +1,27 @@
-import {CoinCode} from "@/libs/cryptoPrices";
 import {prisma} from "@/libs/db";
 import axios from "axios";
 import {subSeconds} from "date-fns";
 
 export const balanceSources = [
-  async (coin:'btc'|'bch'|'ltc'|'eth', address:string) => {
-    const blockchain = {btc: 'bitcoin', bch:'bitcoin-cash', ltc:'litecoin', eth:'ethereum'}[coin];
-    const url = `https://rest.cryptoapis.io/blockchain-data/${blockchain}/mainnet/addresses/${address}/balance`;
-    const response = await axios.get(url, {headers: {'x-api-key': process.env.CRYPTOAPIS_APIE_KEY}});
-    const amount = response.data?.data?.item?.confirmedBalance?.amount as string;
-    if ( ! /^[0-9]+\.?[0-9]*$/.test(amount) ) {
-      throw 'balance validation error: '+amount;
-    }
-    return parseFloat(amount);
-  },
+  // {
+  //   supportedCoins: ['ltc'],
+  //   getBalance: async (coin:'ltc', address:string) => {
+  //     const url = `https://`
+  //   },
+  // },
+  {
+    supportedCoins: ['btc, bch', 'ltc', 'eth'],
+    getBalance: async (coin:'btc'|'bch'|'ltc'|'eth', address:string) => {
+      const blockchain = {btc: 'bitcoin', bch:'bitcoin-cash', ltc:'litecoin', eth:'ethereum'}[coin];
+      const url = `https://rest.cryptoapis.io/blockchain-data/${blockchain}/mainnet/addresses/${address}/balance`;
+      const response = await axios.get(url, {headers: {'x-api-key': process.env.CRYPTOAPIS_APIE_KEY}});
+      const amount = response.data?.data?.item?.confirmedBalance?.amount as string;
+      if ( ! /^[0-9]+\.?[0-9]*$/.test(amount) ) {
+        throw 'balance validation error: '+amount;
+      }
+      return parseFloat(amount);
+    },
+  }
 ];
 
 export async function getCryptoBalance(coin:'btc'|'bch'|'ltc'|'eth', addressString:string, expSeconds=60) {
@@ -31,7 +39,7 @@ export async function getCryptoBalance(coin:'btc'|'bch'|'ltc'|'eth', addressStri
   for (let source of balanceSources) {
     try {
       // get balance
-      const amount = await source(coin, addressString);
+      const amount = await source.getBalance(coin, addressString);
       console.log({amount});
       if (amount) {
         const address = await prisma.address.findFirst({where:{address:addressString,code:coin}});
