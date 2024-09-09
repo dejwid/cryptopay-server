@@ -23,7 +23,7 @@ export default function AccessGetter({productId,accessCode}:{productId:string;ac
   if (sent) {
     return (
       <div>
-        Email sent
+        Email sent (be sure to check your spam)
       </div>
     );
   }
