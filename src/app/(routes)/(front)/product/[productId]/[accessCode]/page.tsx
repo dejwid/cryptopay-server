@@ -9,9 +9,7 @@ export default async function ProductPage({params:{productId,accessCode}}:{param
   const session = await getSession();
   const hasAccessFromSession = session.productId === productId;
   const authSession = await auth();
-  const product = session.productId
-    ? await prisma.product.findFirst({where:{id:session.productId}})
-    : null;
+  const product = await prisma.product.findFirst({where:{id:productId}});
   const isProductAdmin = product?.userEmail === authSession?.user?.email;
   const hasAccess = hasAccessFromSession || isProductAdmin;
   return (
@@ -20,10 +18,13 @@ export default async function ProductPage({params:{productId,accessCode}}:{param
         <AccessGetter productId={productId} accessCode={accessCode} />
       )}
       {product && hasAccess && (
-        <div className="max-w-2xl flex flex-col gap-4 mx-auto p-4">
+        <div className="max-w-2xl flex flex-col gap-4 mx-auto py-4">
           <Heading>{product.name}</Heading>
           {product.uploads.length > 0 && product.uploads.map(upload => (
-            <div key={upload}>
+            <div key={upload} className="bg-gray-200 rounded-md">
+              <h3 className="text-center py-2">
+                {upload.split('/').pop()?.split('-').slice(1).join('-')}
+              </h3>
               <Upload url={upload} />
             </div>
           ))}
