@@ -39,7 +39,7 @@ export default function AwaitingPayment({invoiceId,busyTo,isProduct}:{invoiceId:
         router.refresh();
       }
     });
-  }, 15 * 1000);
+  }, 30 * 1000);
 
   useInterval(() => {
     if (document.hidden || !invoiceId) return;
