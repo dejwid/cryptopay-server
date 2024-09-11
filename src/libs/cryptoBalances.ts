@@ -1,17 +1,16 @@
+import {SupportedCoin} from "@/libs/config";
 import {prisma} from "@/libs/db";
 import axios from "axios";
 import {subSeconds} from "date-fns";
 
-export const balanceSources = [
-  // {
-  //   supportedCoins: ['ltc'],
-  //   getBalance: async (coin:'ltc', address:string) => {
-  //     const url = `https://`
-  //   },
-  // },
+type BalanceSource = {
+  supportedCoins:SupportedCoin[];
+  getBalance:(coin:SupportedCoin,address:string) => Promise<number>;
+};
+export const balanceSources:BalanceSource[] = [
   {
-    supportedCoins: ['btc, bch', 'ltc', 'eth'],
-    getBalance: async (coin:'btc'|'bch'|'ltc'|'eth', address:string) => {
+    supportedCoins: ['btc', 'bch', 'ltc', 'eth'],
+    getBalance: async (coin, address:string) => {
       const blockchain = {btc: 'bitcoin', bch:'bitcoin-cash', ltc:'litecoin', eth:'ethereum'}[coin];
       const url = `https://rest.cryptoapis.io/blockchain-data/${blockchain}/mainnet/addresses/${address}/balance`;
       const response = await axios.get(url, {headers: {'x-api-key': process.env.CRYPTOAPIS_APIE_KEY}});
@@ -20,6 +19,33 @@ export const balanceSources = [
         throw 'balance validation error: '+amount;
       }
       return parseFloat(amount);
+    },
+  },
+  {
+    supportedCoins: ['btc'],
+    getBalance: async (coin,address:string) => {
+      const url = `https://blockchain.info/q/addressbalance/${address}?confirmations=1`;
+      const response = await axios.get(url);
+      const amount = response.data as string;
+      if ( ! /^[0-9]+$/.test(amount) ) {
+        throw 'balance validation error: '+amount;
+      }
+      return parseFloat(amount) / 100000000;
+    },
+  },
+  {
+    supportedCoins: ['ltc'],
+    getBalance: async (coin, address:string) => {
+      const url = `https://litecoinspace.org/api/address/${address}/utxo`;
+      const response = await axios.get(url);
+      const utxos = response.data as {value:number;status:{confirmed:boolean;}}[];
+      let amount = 0;
+      for (const utxo of utxos) {
+        if (utxo.status.confirmed) {
+          amount+= utxo.value;
+        }
+      }
+      return amount / 100000000;
     },
   }
 ];
