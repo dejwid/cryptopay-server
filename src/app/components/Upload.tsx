@@ -3,7 +3,7 @@ function UploadObject({url}:{url:string}) {
     return <img src={url} className="h-full rounded-md" alt=""/>
   }
   if (url.endsWith('.mp4')) {
-    return <video src={url} className="rounded-md" controls />
+    return <video src={url} className="rounded-md" controls preload="metadata" />
   }
   return <span>{url.split('/').pop()}</span>
 }
