@@ -21,9 +21,9 @@ export default async function ProductPage({params:{productId,accessCode}}:{param
         <div className="max-w-2xl flex flex-col gap-4 mx-auto py-4">
           <Heading>{product.name}</Heading>
           {product.uploads.length > 0 && product.uploads.map(upload => (
-            <div key={upload} className="bg-gray-200 rounded-md">
+            <div key={upload} className="bg-gray-200 rounded-md border border-gray-300">
               <h3 className="text-center py-2">
-                {upload.split('/').pop()?.split('-').slice(1).join('-')}
+                {decodeURIComponent(upload.split('/').pop()?.split('-').slice(1).join('-') || '')}
               </h3>
               <Upload url={upload} />
             </div>
