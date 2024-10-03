@@ -30,6 +30,7 @@ export async function addWalletAddressesAction(data: FormData) {
   const code = (data.get('code') as string).toLowerCase() as 'btc'|'bch'|'ltc'|'eth';
   const userEmail = await userEmailOrThrow();
   for (let address of addresses.split("\n")) {
+    address = address.replace(/[^a-z0-9]/gi, '');
     if (address.length > 0) {
       const amount = await getCryptoBalance(code, address.toLowerCase(), 0);
       await prisma.address.create({

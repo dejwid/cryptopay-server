@@ -15,7 +15,7 @@ export default function AddressForm() {
       <div className="flex flex-col gap-2">
         <TextArea name="addresses" required placeholder="Wallet addresses (one per line)"/>
         <div className="">
-          <CryptoCards defaultValue={'btc'} allowedCoins={['btc','bch','eth','ltc']} desktopCols={4} />
+          <CryptoCards name="code" defaultValue={'btc'} allowedCoins={['btc','bch','eth','ltc']} desktopCols={4} />
         </div>
         <div>
           <Button>Add</Button>
