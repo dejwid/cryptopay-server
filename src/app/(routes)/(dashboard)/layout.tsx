@@ -1,6 +1,6 @@
 import DashboardNav from "@/app/components/DashboardNav";
 import Login from "@/app/components/Login";
-import {auth} from "@/auth";
+import {auth, signOut} from "@/auth";
 import {Theme} from "@radix-ui/themes";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -20,23 +20,47 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  const userAllowed = session && session.user && session.user.email === 'dawid.paszko@gmail.com';
   return (
     <html lang="en">
       <body className={inter.className}>
         <Theme accentColor="blue">
           <div className="container grid grid-cols-12 gap-8 py-8">
-            {session && (
+            {session && userAllowed && (
               <div className="col-span-3">
                 <DashboardNav/>
               </div>
             )}
-            {session ? (
+            {(session && userAllowed) && (
               <div className="col-span-9 p-6 border shadow rounded-lg">
                 {children}
               </div>
-            ) : (
+            )}
+            {(session && !userAllowed) && (
+              <div className="col-span-9">
+                <h1 className="text-2xl mb-4">Hey there! 🎉</h1>
+                <p className="mb-2">Thanks for trying to log in!<br/>However, it looks like this app was set up for a specific Google
+                  account.</p>
+                <p>If you think you should have access or have any questions,<br/>feel free to reach out to me!
+                  <a
+                    href="mailto:dawid.paszko@gmail.com?subject=Regarding cryptopay server"
+                    className="text-blue-600 ml-1 border-b border-blue-600/40">dawid.paszko@gmail.com</a>
+                </p>
+                <div className="border-t mt-4 pt-4">
+                  <form action={async () => {
+                    'use server';
+                    await signOut();
+                  }}>
+                    <button className="bg-gray-200 px-4 py-2 rounded-md cursor-pointer">
+                      Logout
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+            {!session && (
               <div className="col-span-12">
-                <Login />
+                <Login/>
               </div>
             )}
           </div>
