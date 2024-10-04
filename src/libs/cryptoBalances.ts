@@ -63,6 +63,7 @@ export async function getCryptoBalance(coin:'btc'|'bch'|'ltc'|'eth', addressStri
   }
 
   for (let source of balanceSources) {
+    if (!source.supportedCoins.includes(coin)) continue;
     try {
       // get balance
       const amount = await source.getBalance(coin, addressString);
