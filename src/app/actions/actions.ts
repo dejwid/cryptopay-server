@@ -207,7 +207,16 @@ export async function validateInvoicePayment(invoice:Invoice):Promise<Invoice> {
         // createdAt between busyFrom and to
         createdAt: {
           gte: address.busyFrom,
-          lte: address.busyTo,
+
+          // Disabled because some people pay really late
+          // and the address is still unoccupied (not ued in any other invoice).
+
+          // lte: address.busyTo,
+
+          // If there is only one address and then one person creates an invoice, doesn't pay
+          // then the other person comes with his invoice and pays, meanwhile the first person can pay
+          // so this is the potential issue.
+          // Can be fixed be having at least 1 addr / day / customer / coin
         },
       },
     });
