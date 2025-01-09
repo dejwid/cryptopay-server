@@ -4,6 +4,7 @@ import {Inter} from "next/font/google";
 import "@/app/globals.css";
 import '@radix-ui/themes/styles.css';
 import {Toaster} from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({subsets: ["latin"]});
 
@@ -20,6 +21,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
     <body className={inter.className}>
+    <Analytics/>
     <Theme accentColor="blue">
       <Toaster />
       <div className="min-w-screen min-h-screen md:bg-gray-100">
