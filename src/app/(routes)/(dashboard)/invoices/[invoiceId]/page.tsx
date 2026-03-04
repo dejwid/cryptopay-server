@@ -7,6 +7,11 @@ import Link from "next/link";
 import { Button } from "@radix-ui/themes";
 import { prettyDate } from "@/libs/dates";
 import ManuallyApproveInvoiceButton from "@/app/components/ManuallyApproveInvoiceButton";
+import { maxPaymentShortfall } from "@/libs/config";
+
+// Calculate thresholds: 90-110% is acceptable (using maxPaymentShortfall = 0.1)
+const minAcceptablePercentage = (1 - maxPaymentShortfall) * 100; // 90%
+const maxAcceptablePercentage = (1 + maxPaymentShortfall) * 100; // 110%
 
 export default async function InvoiceDetailPage({ params }: { params: { invoiceId: string } }) {
   const email = await userEmailOrThrow();
@@ -63,18 +68,18 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
   
   const getPaymentStatus = () => {
     if (invoice.paidAt) {
-      return { label: "Paid", color: "green" as const, icon: BadgeCheck };
+      return { label: "Paid", color: "green" as const, icon: BadgeCheck, textColor: "text-green-600" };
     }
     if (!paymentPercentage || totalReceived === 0) {
-      return { label: "No payment detected", color: "red" as const, icon: AlertTriangleIcon };
+      return { label: "No payment detected", color: "red" as const, icon: AlertTriangleIcon, textColor: "text-red-600" };
     }
-    if (paymentPercentage > 100) {
-      return { label: "Overpaid", color: "green" as const, icon: BadgeCheck };
+    if (paymentPercentage > maxAcceptablePercentage) {
+      return { label: "Overpaid", color: "purple" as const, icon: BadgeCheck, textColor: "text-purple-600" };
     }
-    if (paymentPercentage >= 90) {
-      return { label: "Partial payment", color: "orange" as const, icon: AlertTriangleIcon };
+    if (paymentPercentage >= minAcceptablePercentage) {
+      return { label: "Acceptable", color: "green" as const, icon: BadgeCheck, textColor: "text-green-600" };
     }
-    return { label: "Underpaid", color: "red" as const, icon: AlertTriangleIcon };
+    return { label: "Underpaid", color: "red" as const, icon: AlertTriangleIcon, textColor: "text-red-600" };
   };
   
   const status = getPaymentStatus();
@@ -204,15 +209,15 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
                     <Table.Row>
                       <Table.Cell className="text-gray-500">Payment %</Table.Cell>
                       <Table.Cell>
-                        <Text color={
-                          paymentPercentage > 100 
-                            ? 'green' 
-                            : paymentPercentage >= 90 
-                              ? 'orange' 
-                              : 'red'
+                        <span className={
+                          paymentPercentage > maxAcceptablePercentage 
+                            ? 'text-purple-600 font-bold' 
+                            : paymentPercentage < minAcceptablePercentage 
+                              ? 'text-red-600 font-bold' 
+                              : 'text-green-600'
                         }>
                           {paymentPercentage.toFixed(1)}%
-                        </Text>
+                        </span>
                       </Table.Cell>
                     </Table.Row>
                   )}
