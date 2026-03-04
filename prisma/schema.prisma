@@ -112,6 +112,7 @@ model Invoice {
   paidAt                DateTime?
   paidToAddressId       String?   @db.ObjectId
   paidByBalanceChangeId String?   @db.ObjectId
+  manuallyApprovedAt    DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 }

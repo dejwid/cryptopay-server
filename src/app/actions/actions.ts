@@ -291,3 +291,62 @@ export async function sendAccessLinkAction(formData:FormData) {
     return false;
   }
 }
+
+/**
+ * Manually approve an invoice payment that was below the threshold.
+ * This allows the merchant to mark an underpaid invoice as paid and deliver the product.
+ */
+export async function manuallyApproveInvoiceAction(invoiceId: string) {
+  const userEmail = await userEmailOrThrow();
+  
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: invoiceId, payeeEmail: userEmail }
+  });
+  
+  if (!invoice) {
+    throw new Error('Invoice not found');
+  }
+  
+  if (invoice.paidAt) {
+    throw new Error('Invoice is already marked as paid');
+  }
+  
+  // Find the address assigned to this invoice
+  const address = await prisma.address.findFirst({
+    where: { invoiceId: invoice.id }
+  });
+  
+  const now = new Date();
+  
+  // Mark invoice as paid with manual approval
+  const updatedInvoice = await prisma.invoice.update({
+    where: { id: invoice.id },
+    data: {
+      paidAt: now,
+      manuallyApprovedAt: now,
+      paidToAddressId: address?.id || null,
+    },
+  });
+  
+  // Release the address if one was assigned
+  if (address) {
+    await prisma.address.update({
+      where: { id: address.id },
+      data: { busyFrom: null, busyTo: null, invoiceId: null },
+    });
+  }
+  
+  // Send product access email if this is a product invoice
+  if (invoice.productId) {
+    await createAndSendProductLink(invoice.productId, invoice.payerEmail);
+  }
+  
+  // Notify the payee (merchant) about manual approval
+  await sendEmail(
+    [invoice.payeeEmail],
+    'Payment manually approved',
+    `${invoice.title}: Payment was manually approved for ${invoice.coinAmount10pow10 ? `${invoice.coinAmount10pow10/10**10} ${invoice.coinCode}` : `$${invoice.usdAmountCents/100}USD`}`
+  );
+  
+  return updatedInvoice;
+}

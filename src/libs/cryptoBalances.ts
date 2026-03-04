@@ -67,7 +67,7 @@ export async function getCryptoBalance(coin:'btc'|'bch'|'ltc'|'eth', addressStri
     try {
       // get balance
       const amount = await source.getBalance(coin, addressString);
-      console.log({amount});
+      console.log('new amount found',{amount,addressString,coin});
       if (amount) {
         const address = await prisma.address.findFirst({where:{address:addressString,code:coin}});
         if (address) {
