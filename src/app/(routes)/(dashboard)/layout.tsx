@@ -25,44 +25,46 @@ export default async function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Theme accentColor="blue">
-          <div className="container grid grid-cols-12 gap-8 py-8">
+          <div className="min-h-screen">
             {session && userAllowed && (
-              <div className="col-span-3">
+              <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
                 <DashboardNav/>
-              </div>
+              </header>
             )}
-            {(session && userAllowed) && (
-              <div className="col-span-9 p-6 border shadow rounded-lg">
-                {children}
-              </div>
-            )}
-            {(session && !userAllowed) && (
-              <div className="col-span-9">
-                <h1 className="text-2xl mb-4">Hey there! 🎉</h1>
-                <p className="mb-2">Thanks for trying to log in!<br/>However, it looks like this app was set up for a specific Google
-                  account.</p>
-                <p>If you think you should have access or have any questions,<br/>feel free to reach out to me!
-                  <a
-                    href="mailto:dawid.paszko@gmail.com?subject=Regarding cryptopay server"
-                    className="text-blue-600 ml-1 border-b border-blue-600/40">dawid.paszko@gmail.com</a>
-                </p>
-                <div className="border-t mt-4 pt-4">
-                  <form action={async () => {
-                    'use server';
-                    await signOut();
-                  }}>
-                    <button className="bg-gray-200 px-4 py-2 rounded-md cursor-pointer">
-                      Logout
-                    </button>
-                  </form>
+            <main className="container py-8">
+              {(session && userAllowed) && (
+                <div className="p-6 border shadow rounded-lg bg-white">
+                  {children}
                 </div>
-              </div>
-            )}
-            {!session && (
-              <div className="col-span-12">
-                <Login/>
-              </div>
-            )}
+              )}
+              {(session && !userAllowed) && (
+                <div className="max-w-2xl mx-auto">
+                  <h1 className="text-2xl mb-4">Hey there! 🎉</h1>
+                  <p className="mb-2">Thanks for trying to log in!<br/>However, it looks like this app was set up for a specific Google
+                    account.</p>
+                  <p>If you think you should have access or have any questions,<br/>feel free to reach out to me!
+                    <a
+                      href="mailto:dawid.paszko@gmail.com?subject=Regarding cryptopay server"
+                      className="text-blue-600 ml-1 border-b border-blue-600/40">dawid.paszko@gmail.com</a>
+                  </p>
+                  <div className="border-t mt-4 pt-4">
+                    <form action={async () => {
+                      'use server';
+                      await signOut();
+                    }}>
+                      <button className="bg-gray-200 px-4 py-2 rounded-md cursor-pointer">
+                        Logout
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+              {!session && (
+                <div className="max-w-md mx-auto">
+                  <Login/>
+                </div>
+              )}
+            </main>
           </div>
         </Theme>
       </body>
