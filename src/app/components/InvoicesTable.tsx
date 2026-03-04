@@ -6,11 +6,16 @@ import Link from "next/link";
 import React from "react";
 import ManuallyApproveInvoiceButton from "./ManuallyApproveInvoiceButton";
 import {InvoiceWithPaymentStatus} from "./DashboardInvoices";
+import {maxPaymentShortfall} from "@/libs/config";
 
 interface InvoiceWithExtras extends Invoice {
   receivedAmount10pow10: number | null;
   paymentPercentage: number | null;
 }
+
+// Calculate thresholds: 90-110% is acceptable (using maxPaymentShortfall = 0.1)
+const minAcceptablePercentage = (1 - maxPaymentShortfall) * 100; // 90%
+const maxAcceptablePercentage = (1 + maxPaymentShortfall) * 100; // 110%
 
 export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}) {
   return (
@@ -37,33 +42,53 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
                 {invoice.usdAmountCents/100} USD
               </Table.Cell>
               <Table.Cell>
-                {invoice.paidAt ? (
-                  <Text color="green" className="flex gap-1 items-center">
-                    <BadgeCheck className="w-5 h-5" />
-                    Paid
-                    {invoice.manuallyApprovedAt && (
-                      <span className="text-xs bg-orange-100 text-orange-700 px-1 rounded ml-1">manual</span>
-                    )}
-                  </Text>
-                ) : invoice.paymentPercentage !== null && invoice.paymentPercentage > 0 ? (
-                  <div className="flex flex-col gap-1">
-                    <Text color="orange" className="flex gap-1 items-center">
-                      <AlertTriangleIcon className="w-5 h-5" />
-                      Partial payment
+                <Link href={`/invoices/${invoice.id}`} className="hover:opacity-80 transition-opacity block">
+                  {invoice.paidAt ? (
+                    <Text color="green" className="flex gap-1 items-center">
+                      <BadgeCheck className="w-5 h-5" />
+                      Paid
+                      {invoice.manuallyApprovedAt && (
+                        <span className="text-xs bg-orange-100 text-orange-700 px-1 rounded ml-1">manual</span>
+                      )}
                     </Text>
-                    <Text size="1" className="text-gray-600">
-                      Received: {(invoice.receivedAmount10pow10! / 10**10).toFixed(8)} {invoice.coinCode?.toUpperCase()}
+                  ) : invoice.receivedAmount10pow10 !== null && invoice.receivedAmount10pow10 > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {invoice.paymentPercentage! > maxAcceptablePercentage ? (
+                        <Text className="flex gap-1 items-center text-purple-600">
+                          <BadgeCheck className="w-5 h-5" />
+                          Overpaid
+                        </Text>
+                      ) : invoice.paymentPercentage! >= minAcceptablePercentage ? (
+                        <Text color="green" className="flex gap-1 items-center">
+                          <BadgeCheck className="w-5 h-5" />
+                          Acceptable
+                        </Text>
+                      ) : (
+                        <Text color="red" className="flex gap-1 items-center">
+                          <AlertTriangleIcon className="w-5 h-5" />
+                          Underpaid
+                        </Text>
+                      )}
+                      <Text size="1" className="text-gray-600">
+                        Received: {(invoice.receivedAmount10pow10 / 10**10).toFixed(8)} {invoice.coinCode?.toUpperCase()}
+                      </Text>
+                      <Text size="1" className={
+                        invoice.paymentPercentage! > maxAcceptablePercentage 
+                          ? "text-purple-600 font-bold" 
+                          : invoice.paymentPercentage! < minAcceptablePercentage 
+                            ? "text-red-600 font-bold" 
+                            : "text-green-600"
+                      }>
+                        {invoice.paymentPercentage!.toFixed(1)}% of expected
+                      </Text>
+                    </div>
+                  ) : (
+                    <Text color="red" className="flex gap-1 items-center">
+                      <BadgeAlert className="w-5 h-5" />
+                      No payment detected
                     </Text>
-                    <Text size="1" className={invoice.paymentPercentage < 90 ? "text-red-600 font-bold" : "text-orange-600"}>
-                      {invoice.paymentPercentage.toFixed(1)}% of expected
-                    </Text>
-                  </div>
-                ) : (
-                  <Text color="red" className="flex gap-1 items-center">
-                    <BadgeAlert className="w-5 h-5" />
-                    No payment detected
-                  </Text>
-                )}
+                  )}
+                </Link>
               </Table.Cell>
               <Table.Cell>
                 <div className="flex gap-1 items-center text-gray-600">
