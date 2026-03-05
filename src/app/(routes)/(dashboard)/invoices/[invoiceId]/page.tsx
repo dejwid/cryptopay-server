@@ -2,11 +2,12 @@ import { userEmailOrThrow } from "@/app/actions/actions";
 import { prisma } from "@/libs/db";
 import { notFound } from "next/navigation";
 import { Box, Card, Flex, Heading, Table, Text, Badge, Separator } from "@radix-ui/themes";
-import { BadgeCheck, AlertTriangleIcon, ClockIcon, ArrowLeftIcon } from "lucide-react";
+import { BadgeCheck, AlertTriangleIcon, ClockIcon, ArrowLeftIcon, CheckCircle2Icon, XCircleIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@radix-ui/themes";
 import { prettyDate } from "@/libs/dates";
 import ManuallyApproveInvoiceButton from "@/app/components/ManuallyApproveInvoiceButton";
+import InvoiceEmailActions from "@/app/components/InvoiceEmailActions";
 import { maxPaymentShortfall } from "@/libs/config";
 
 // Calculate thresholds: 90-110% is acceptable (using maxPaymentShortfall = 0.1)
@@ -65,6 +66,12 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
       paymentPercentage = (totalReceived / invoice.coinAmount10pow10) * 100;
     }
   }
+
+  // Get email logs for this invoice
+  const emailLogs = await prisma.emailLog.findMany({
+    where: { invoiceId: invoice.id },
+    orderBy: { createdAt: 'desc' },
+  });
   
   const getPaymentStatus = () => {
     if (invoice.paidAt) {
@@ -379,6 +386,109 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
           )}
         </Card>
       </div>
+
+      {/* Email Actions - only show for paid invoices */}
+      {invoice.paidAt && (
+        <div className="mt-4">
+          <InvoiceEmailActions
+            invoiceId={invoice.id}
+            payerEmail={invoice.payerEmail}
+            payeeEmail={invoice.payeeEmail}
+            hasProduct={!!invoice.productId}
+          />
+        </div>
+      )}
+
+      {/* Email Logs for this invoice */}
+      {emailLogs.length > 0 && (
+        <Card size="3" className="mt-4">
+          <Flex gap="2" align="center" mb="3">
+            <Heading size="4">Email Log</Heading>
+            <Badge color="gray" variant="soft">{emailLogs.length}</Badge>
+          </Flex>
+
+          {/* Desktop Table */}
+          <div className="hidden sm:block">
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>To</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Subject</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Details</Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {emailLogs.map((log) => (
+                  <Table.Row key={log.id}>
+                    <Table.Cell>
+                      {log.status === 'sent' ? (
+                        <Flex gap="1" align="center">
+                          <CheckCircle2Icon className="w-4 h-4 text-green-500" />
+                          <Badge color="green" variant="soft" size="1">Sent</Badge>
+                        </Flex>
+                      ) : (
+                        <Flex gap="1" align="center">
+                          <XCircleIcon className="w-4 h-4 text-red-500" />
+                          <Badge color="red" variant="soft" size="1">Failed</Badge>
+                        </Flex>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell className="text-sm text-gray-500 whitespace-nowrap">
+                      {prettyDate(log.createdAt)}
+                    </Table.Cell>
+                    <Table.Cell className="text-sm">{log.to.join(', ')}</Table.Cell>
+                    <Table.Cell className="text-sm">{log.subject}</Table.Cell>
+                    <Table.Cell>
+                      {log.error ? (
+                        <details>
+                          <summary className="text-xs text-red-600 cursor-pointer">Error</summary>
+                          <pre className="mt-1 bg-red-50 p-2 rounded text-xs text-red-700 max-w-xs overflow-auto">{log.error}</pre>
+                        </details>
+                      ) : log.mailgunResponse ? (
+                        <details>
+                          <summary className="text-xs text-gray-500 cursor-pointer">Response</summary>
+                          <pre className="mt-1 bg-gray-50 p-2 rounded text-xs text-gray-700 max-w-xs overflow-auto">
+                            {(() => {
+                              try { return JSON.stringify(JSON.parse(log.mailgunResponse!), null, 2); }
+                              catch { return log.mailgunResponse; }
+                            })()}
+                          </pre>
+                        </details>
+                      ) : '-'}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="sm:hidden space-y-2">
+            {emailLogs.map((log) => (
+              <div key={log.id} className="bg-gray-50 rounded p-3">
+                <Flex justify="between" align="start" mb="1">
+                  <Text size="2" weight="medium">{log.subject}</Text>
+                  {log.status === 'sent' ? (
+                    <Badge color="green" variant="soft" size="1">Sent</Badge>
+                  ) : (
+                    <Badge color="red" variant="soft" size="1">Failed</Badge>
+                  )}
+                </Flex>
+                <Text size="1" color="gray" className="block">{prettyDate(log.createdAt)}</Text>
+                <Text size="1" className="block">To: {log.to.join(', ')}</Text>
+                {log.error && (
+                  <details className="mt-1">
+                    <summary className="text-xs text-red-600 cursor-pointer">Error</summary>
+                    <pre className="mt-1 bg-red-50 p-1 rounded text-xs text-red-700 overflow-auto">{log.error}</pre>
+                  </details>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </Box>
   );
 }

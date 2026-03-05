@@ -1,7 +1,7 @@
 'use client';
 
 import {Button} from "@radix-ui/themes";
-import {HomeIcon, Notebook, PackageIcon, ReceiptIcon, Workflow, Menu, X} from "lucide-react";
+import {HomeIcon, Notebook, PackageIcon, ReceiptIcon, Workflow, Menu, X, MailIcon} from "lucide-react";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 import {useState, useEffect} from "react";
@@ -16,6 +16,7 @@ export default function DashboardNav(){
     {href: '/invoices', label: 'Invoices', icon:<ReceiptIcon className="h-4 w-4"/>},
     {href: '/addresses', label: 'Wallets', icon: <Notebook className="h-4 w-4"/>},
     {href: '/automations', label: 'Automations', icon: <Workflow className="h-4 w-4"/>},
+    {href: '/email-logs', label: 'Email Logs', icon: <MailIcon className="h-4 w-4"/>},
   ];
 
   // Close mobile menu when route changes

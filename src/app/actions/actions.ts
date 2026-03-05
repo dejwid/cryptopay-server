@@ -237,13 +237,14 @@ export async function validateInvoicePayment(invoice:Invoice):Promise<Invoice> {
       });
       // send email to the payer
       if (invoice.productId) {
-        await createAndSendProductLink(invoice.productId, invoice.payerEmail);
+        await createAndSendProductLink(invoice.productId, invoice.payerEmail, invoice.id);
       }
       // email to the payee
       await sendEmail(
         [invoice.payeeEmail],
         'You just got paid',
-        `${invoice.title}: ${invoice.coinAmount10pow10/10**10} ${invoice.coinCode} ~ $${invoice.usdAmountCents/100}USD`
+        `${invoice.title}: ${invoice.coinAmount10pow10/10**10} ${invoice.coinCode} ~ $${invoice.usdAmountCents/100}USD`,
+        invoice.id,
       );
 
       return updatedInvoice;
@@ -256,7 +257,7 @@ function randomIntFromInterval(min:number, max:number) { // min and max included
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-export async function createAndSendProductLink(productId:string,email:string|null=null) {
+export async function createAndSendProductLink(productId:string, email:string|null=null, invoiceId?:string) {
   const accessCode = randomIntFromInterval(1000,9999).toString();
   await prisma.productAccessCode.create({
     data: {
@@ -266,7 +267,12 @@ export async function createAndSendProductLink(productId:string,email:string|nul
     },
   });
   if (email) {
-   await sendEmail([email], 'Product access', process.env.NEXTAUTH_URL+`/product/${productId}/${accessCode}`);
+    await sendEmail(
+      [email],
+      'Product access',
+      process.env.NEXTAUTH_URL+`/product/${productId}/${accessCode}`,
+      invoiceId,
+    );
   }
 }
 
@@ -285,7 +291,7 @@ export async function sendAccessLinkAction(formData:FormData) {
   const productId = formData.get('productId') as string;
   const invoice = await prisma.invoice.findFirst({where:{payerEmail:email,productId,paidAt:{isSet:true}}});
   if (invoice) {
-    await createAndSendProductLink(productId, email);
+    await createAndSendProductLink(productId, email, invoice.id);
     return true;
   } else {
     return false;
@@ -296,12 +302,12 @@ export async function sendAccessLinkAction(formData:FormData) {
  * Send a test email to verify email functionality.
  */
 export async function sendTestEmailAction(targetEmail: string) {
-  const userEmail = await userEmailOrThrow();
+  await userEmailOrThrow();
   const timestamp = new Date().toISOString();
   await sendEmail(
     [targetEmail],
     'CryptoPay Server - Test Email',
-    `This is a test email from CryptoPay Server.\n\nSent at: ${timestamp}\n\nIf you received this email, your email configuration is working correctly!`
+    `This is a test email from CryptoPay Server.\n\nSent at: ${timestamp}\n\nIf you received this email, your email configuration is working correctly!`,
   );
   return { success: true, sentTo: targetEmail, timestamp };
 }
@@ -350,17 +356,85 @@ export async function manuallyApproveInvoiceAction(invoiceId: string) {
     });
   }
   
-  // Send product access email if this is a product invoice
-  if (invoice.productId) {
-    await createAndSendProductLink(invoice.productId, invoice.payerEmail);
+  // Send product access email to the customer if this is a product invoice
+  // Use try-catch so one failure doesn't block the other email
+  if (invoice.productId && invoice.payerEmail) {
+    try {
+      await createAndSendProductLink(invoice.productId, invoice.payerEmail, invoice.id);
+    } catch {
+      // Error is already logged to EmailLog by sendEmail; continue to merchant email
+    }
   }
   
-  // Notify the payee (merchant) about manual approval
-  await sendEmail(
-    [invoice.payeeEmail],
-    'Payment manually approved',
-    `${invoice.title}: Payment was manually approved for ${invoice.coinAmount10pow10 ? `${invoice.coinAmount10pow10/10**10} ${invoice.coinCode}` : `$${invoice.usdAmountCents/100}USD`}`
-  );
+  // Notify the payee (merchant) about manual approval - always try regardless of customer email
+  try {
+    await sendEmail(
+      [invoice.payeeEmail],
+      'Payment manually approved',
+      `${invoice.title}: Payment was manually approved for ${invoice.coinAmount10pow10 ? `${invoice.coinAmount10pow10/10**10} ${invoice.coinCode}` : `$${invoice.usdAmountCents/100}USD`}`,
+      invoice.id,
+    );
+  } catch {
+    // Error is already logged to EmailLog; don't rethrow so the action still returns success
+  }
   
   return updatedInvoice;
+}
+
+/**
+ * Resend the product access link to the customer for a paid invoice.
+ * Admin can override the email address.
+ */
+export async function resendProductAccessEmailAction(invoiceId: string, overrideEmail?: string) {
+  const userEmail = await userEmailOrThrow();
+  
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: invoiceId, payeeEmail: userEmail }
+  });
+  
+  if (!invoice) throw new Error('Invoice not found');
+  if (!invoice.paidAt) throw new Error('Invoice is not paid');
+  if (!invoice.productId) throw new Error('Invoice has no product');
+  
+  const targetEmail = overrideEmail || invoice.payerEmail;
+  if (!targetEmail) throw new Error('No email address available');
+  
+  await createAndSendProductLink(invoice.productId, targetEmail, invoice.id);
+  return { success: true, sentTo: targetEmail };
+}
+
+/**
+ * Resend the merchant payment notification for a paid invoice.
+ * Admin can override the email address.
+ */
+export async function resendMerchantNotificationAction(invoiceId: string, overrideEmail?: string) {
+  const userEmail = await userEmailOrThrow();
+  
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: invoiceId, payeeEmail: userEmail }
+  });
+  
+  if (!invoice) throw new Error('Invoice not found');
+  if (!invoice.paidAt) throw new Error('Invoice is not paid');
+  
+  const targetEmail = overrideEmail || invoice.payeeEmail;
+  const subject = invoice.manuallyApprovedAt ? 'Payment manually approved' : 'You just got paid';
+  const body = `${invoice.title}: ${invoice.coinAmount10pow10 ? `${invoice.coinAmount10pow10/10**10} ${invoice.coinCode}` : `$${invoice.usdAmountCents/100}USD`}`;
+  
+  await sendEmail([targetEmail], subject, body, invoice.id);
+  return { success: true, sentTo: targetEmail };
+}
+
+/**
+ * Get email logs for an invoice or all logs.
+ */
+export async function getEmailLogsAction(invoiceId?: string) {
+  await userEmailOrThrow();
+  
+  const where = invoiceId ? { invoiceId } : {};
+  return prisma.emailLog.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  });
 }
