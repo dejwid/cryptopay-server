@@ -1,4 +1,3 @@
-'use server';
 import {auth, signIn, signOut} from "@/auth";
 import {Button} from "@radix-ui/themes";
 
