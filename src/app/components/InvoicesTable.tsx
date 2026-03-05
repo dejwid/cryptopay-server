@@ -1,3 +1,5 @@
+'use client';
+
 import {prettyDate} from "@/libs/dates";
 import {Invoice} from "@prisma/client";
 import {Button, Table, Text} from "@radix-ui/themes";

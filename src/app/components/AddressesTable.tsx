@@ -1,3 +1,5 @@
+'use client';
+
 import BalanceRefresh from "@/app/components/BalanceRefresh";
 import type {CoinCode, CryptoPrices} from "@/libs/cryptoPrices";
 import {prettyDate} from "@/libs/dates";

@@ -1,3 +1,5 @@
+'use client';
+
 import {BchIcon, BtcIcon, EthIcon, LtcIcon} from "@/app/components/CryptoIcons";
 import {RadioGroup} from "@radix-ui/themes";
 

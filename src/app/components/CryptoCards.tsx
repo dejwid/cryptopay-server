@@ -1,3 +1,5 @@
+'use client';
+
 import {BchIcon, BtcIcon, EthIcon, LtcIcon} from "@/app/components/CryptoIcons";
 import {usdToCoinClient} from "@/libs/crypto-client";
 import {CoinCode, CryptoPrices} from "@/libs/cryptoPrices";

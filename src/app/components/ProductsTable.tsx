@@ -1,3 +1,5 @@
+'use client';
+
 import ArchiveProductButton from "@/app/components/ArchiveProductButton";
 import {Product} from "@prisma/client";
 import {Button, DropdownMenu, Table} from "@radix-ui/themes";
