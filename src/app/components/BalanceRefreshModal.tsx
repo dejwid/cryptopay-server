@@ -208,6 +208,13 @@ export default function BalanceRefreshModal({
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [autoExpand, setAutoExpand] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasStartedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+
+  // Keep onComplete ref updated
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -228,6 +235,10 @@ export default function BalanceRefreshModal({
   };
 
   const startRefresh = useCallback(async () => {
+    // Prevent multiple simultaneous requests
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
+    
     setSteps([]);
     setIsLoading(true);
     setExpandedSteps(new Set());
@@ -298,13 +309,23 @@ export default function BalanceRefreshModal({
       }]);
     } finally {
       setIsLoading(false);
-      onComplete?.();
+      hasStartedRef.current = false;
+      // Call onComplete after a short delay to allow UI to settle
+      setTimeout(() => {
+        onCompleteRef.current?.();
+      }, 100);
     }
-  }, [addressId, onComplete, autoExpand]);
+  }, [addressId, autoExpand]);
 
+  // Start refresh when modal opens
   useEffect(() => {
-    if (open && addressId) {
+    if (open && addressId && !hasStartedRef.current) {
       startRefresh();
+    }
+    
+    // Reset when modal closes
+    if (!open) {
+      hasStartedRef.current = false;
     }
   }, [open, addressId, startRefresh]);
 
