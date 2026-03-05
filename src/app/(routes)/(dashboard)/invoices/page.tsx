@@ -8,18 +8,18 @@ export default async function InvoicesPage() {
 
   return (
     <div>
-        <Heading className="mb-4 flex gap-4">
-          Invoices
-          <Link href="/invoices/new">
-            <Button variant="outline">
-              <PlusIcon className="h-4 w-4" />
-              Create new
-            </Button>
-          </Link>
-        </Heading>
-        <Suspense fallback="Loading...">
-          <DashboardInvoices />
-        </Suspense>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+        <Heading>Invoices</Heading>
+        <Link href="/invoices/new">
+          <Button variant="outline">
+            <PlusIcon className="h-4 w-4" />
+            Create new
+          </Button>
+        </Link>
+      </div>
+      <Suspense fallback="Loading...">
+        <DashboardInvoices />
+      </Suspense>
     </div>
   );
 }

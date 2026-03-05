@@ -12,7 +12,7 @@ export default async function EditProductPage({
   const product = await prisma.product.findFirstOrThrow({where:{id:productId}});
   return (
     <div>
-      <Heading>Edit product: {product.name}</Heading>
+      <Heading className="mb-4 break-words">Edit product: {product.name}</Heading>
       <ProductForm product={product} />
     </div>
   );

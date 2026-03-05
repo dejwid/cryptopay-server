@@ -4,7 +4,7 @@ import {auth} from "@/auth";
 import {getCryptoPrices} from "@/libs/cryptoPrices";
 import {prettyDate} from "@/libs/dates";
 import {PrismaClient} from "@prisma/client";
-import {Button, Card, Heading, Table, Tabs, Text} from "@radix-ui/themes";
+import {Button, Card, Heading, Table, Tabs, Text, ScrollArea} from "@radix-ui/themes";
 import {uniq} from "lodash";
 import {PlusIcon} from "lucide-react";
 import Link from "next/link";
@@ -20,24 +20,26 @@ export default async function AddressesPage() {
     <div>
       {session && (
         <div>
-          <Heading className="mb-4 flex gap-4">
-            Your wallets
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+            <Heading>Your wallets</Heading>
             <Link href="/addresses/new">
               <Button variant="outline">
                 <PlusIcon className="h-4 w-4" />
                 Add addresses
               </Button>
             </Link>
-          </Heading>
+          </div>
           <Tabs.Root defaultValue="all">
-            <Tabs.List>
-              <Tabs.Trigger value="all">All ({addresses.length})</Tabs.Trigger>
-              {addressesCoinTypes.map(coin => (
-                <Tabs.Trigger value={coin} key={coin}>
-                  {coin.toUpperCase()} ({addresses.filter(a => a.code === coin).length})
-                </Tabs.Trigger>
-              ))}
-            </Tabs.List>
+            <ScrollArea>
+              <Tabs.List style={{ minWidth: 'max-content' }}>
+                <Tabs.Trigger value="all">All ({addresses.length})</Tabs.Trigger>
+                {addressesCoinTypes.map(coin => (
+                  <Tabs.Trigger value={coin} key={coin}>
+                    {coin.toUpperCase()} ({addresses.filter(a => a.code === coin).length})
+                  </Tabs.Trigger>
+                ))}
+              </Tabs.List>
+            </ScrollArea>
             <Tabs.Content value="all">
               <AddressesTable addresses={addresses} cryptoPrices={cryptoPrices} />
             </Tabs.Content>

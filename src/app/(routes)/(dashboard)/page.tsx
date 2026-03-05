@@ -7,7 +7,7 @@ import {Suspense} from "react";
 export default async function Home() {
   return (
    <div>
-     <div className="mb-4 flex">
+     <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
        <div className="grow">
          <Heading>Home</Heading>
        </div>

@@ -91,73 +91,126 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
         <Link href="/invoices">
           <Button variant="ghost" size="1">
             <ArrowLeftIcon className="w-4 h-4" />
-            Back to invoices
+            <span className="hidden sm:inline">Back to invoices</span>
+            <span className="sm:hidden">Back</span>
           </Button>
         </Link>
       </Flex>
       
-      <Heading size="6" mb="4">Invoice: {invoice.title}</Heading>
+      <Heading size="6" mb="4" className="break-words">Invoice: {invoice.title}</Heading>
       
-      <Flex gap="4" wrap="wrap">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         {/* Invoice Details Card */}
-        <Card size="3" style={{ flex: '1', minWidth: '300px' }}>
+        <Card size="3">
           <Heading size="4" mb="3">Invoice Details</Heading>
           
-          <Table.Root>
-            <Table.Body>
-              <Table.Row>
-                <Table.Cell className="text-gray-500">Status</Table.Cell>
-                <Table.Cell>
-                  <Flex gap="2" align="center">
-                    <Text color={status.color}>
-                      <StatusIcon className="w-4 h-4 inline mr-1" />
-                      {status.label}
-                    </Text>
-                    {invoice.manuallyApprovedAt && (
-                      <Badge color="orange">manual approval</Badge>
-                    )}
-                  </Flex>
-                </Table.Cell>
-              </Table.Row>
-              <Table.Row>
-                <Table.Cell className="text-gray-500">Payer Email</Table.Cell>
-                <Table.Cell>{invoice.payerEmail || '-'}</Table.Cell>
-              </Table.Row>
-              <Table.Row>
-                <Table.Cell className="text-gray-500">Product</Table.Cell>
-                <Table.Cell>{product?.name || '-'}</Table.Cell>
-              </Table.Row>
-              <Table.Row>
-                <Table.Cell className="text-gray-500">USD Amount</Table.Cell>
-                <Table.Cell>${(invoice.usdAmountCents / 100).toFixed(2)}</Table.Cell>
-              </Table.Row>
-              <Table.Row>
-                <Table.Cell className="text-gray-500">Crypto Amount</Table.Cell>
-                <Table.Cell>
-                  {invoice.coinAmount10pow10 
-                    ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                    : 'Not selected'}
-                </Table.Cell>
-              </Table.Row>
-              <Table.Row>
-                <Table.Cell className="text-gray-500">Created</Table.Cell>
-                <Table.Cell>
-                  <Flex gap="1" align="center">
-                    <ClockIcon className="w-4 h-4 text-gray-400" />
-                    {prettyDate(invoice.createdAt)}
-                  </Flex>
-                </Table.Cell>
-              </Table.Row>
-              {invoice.paidAt && (
+          {/* Desktop Table View */}
+          <div className="hidden sm:block">
+            <Table.Root>
+              <Table.Body>
                 <Table.Row>
-                  <Table.Cell className="text-gray-500">Paid At</Table.Cell>
+                  <Table.Cell className="text-gray-500">Status</Table.Cell>
                   <Table.Cell>
-                    <Text color="green">{prettyDate(invoice.paidAt)}</Text>
+                    <Flex gap="2" align="center">
+                      <Text color={status.color}>
+                        <StatusIcon className="w-4 h-4 inline mr-1" />
+                        {status.label}
+                      </Text>
+                      {invoice.manuallyApprovedAt && (
+                        <Badge color="orange">manual approval</Badge>
+                      )}
+                    </Flex>
                   </Table.Cell>
                 </Table.Row>
-              )}
-            </Table.Body>
-          </Table.Root>
+                <Table.Row>
+                  <Table.Cell className="text-gray-500">Payer Email</Table.Cell>
+                  <Table.Cell className="break-all">{invoice.payerEmail || '-'}</Table.Cell>
+                </Table.Row>
+                <Table.Row>
+                  <Table.Cell className="text-gray-500">Product</Table.Cell>
+                  <Table.Cell>{product?.name || '-'}</Table.Cell>
+                </Table.Row>
+                <Table.Row>
+                  <Table.Cell className="text-gray-500">USD Amount</Table.Cell>
+                  <Table.Cell>${(invoice.usdAmountCents / 100).toFixed(2)}</Table.Cell>
+                </Table.Row>
+                <Table.Row>
+                  <Table.Cell className="text-gray-500">Crypto Amount</Table.Cell>
+                  <Table.Cell>
+                    {invoice.coinAmount10pow10 
+                      ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                      : 'Not selected'}
+                  </Table.Cell>
+                </Table.Row>
+                <Table.Row>
+                  <Table.Cell className="text-gray-500">Created</Table.Cell>
+                  <Table.Cell>
+                    <Flex gap="1" align="center">
+                      <ClockIcon className="w-4 h-4 text-gray-400" />
+                      {prettyDate(invoice.createdAt)}
+                    </Flex>
+                  </Table.Cell>
+                </Table.Row>
+                {invoice.paidAt && (
+                  <Table.Row>
+                    <Table.Cell className="text-gray-500">Paid At</Table.Cell>
+                    <Table.Cell>
+                      <Text color="green">{prettyDate(invoice.paidAt)}</Text>
+                    </Table.Cell>
+                  </Table.Row>
+                )}
+              </Table.Body>
+            </Table.Root>
+          </div>
+
+          {/* Mobile List View */}
+          <div className="sm:hidden space-y-3">
+            <div className="flex justify-between items-center py-2 border-b">
+              <span className="text-gray-500">Status</span>
+              <Flex gap="2" align="center">
+                <Text color={status.color}>
+                  <StatusIcon className="w-4 h-4 inline mr-1" />
+                  {status.label}
+                </Text>
+                {invoice.manuallyApprovedAt && (
+                  <Badge color="orange">manual</Badge>
+                )}
+              </Flex>
+            </div>
+            <div className="flex justify-between items-start py-2 border-b">
+              <span className="text-gray-500">Payer Email</span>
+              <span className="text-right break-all max-w-[60%]">{invoice.payerEmail || '-'}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b">
+              <span className="text-gray-500">Product</span>
+              <span>{product?.name || '-'}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b">
+              <span className="text-gray-500">USD Amount</span>
+              <span className="font-medium">${(invoice.usdAmountCents / 100).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b">
+              <span className="text-gray-500">Crypto</span>
+              <span className="text-right">
+                {invoice.coinAmount10pow10 
+                  ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                  : 'Not selected'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b">
+              <span className="text-gray-500">Created</span>
+              <Flex gap="1" align="center">
+                <ClockIcon className="w-4 h-4 text-gray-400" />
+                {prettyDate(invoice.createdAt)}
+              </Flex>
+            </div>
+            {invoice.paidAt && (
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-gray-500">Paid At</span>
+                <Text color="green">{prettyDate(invoice.paidAt)}</Text>
+              </div>
+            )}
+          </div>
           
           {!invoice.paidAt && (
             <Box mt="4">
@@ -170,88 +223,154 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
         </Card>
         
         {/* Payment Details Card */}
-        <Card size="3" style={{ flex: '1', minWidth: '300px' }}>
+        <Card size="3">
           <Heading size="4" mb="3">Payment Details</Heading>
           
           {address ? (
             <>
-              <Table.Root>
-                <Table.Body>
-                  <Table.Row>
-                    <Table.Cell className="text-gray-500">Payment Address</Table.Cell>
-                    <Table.Cell className="font-mono text-xs break-all">
-                      {address.address}
-                    </Table.Cell>
-                  </Table.Row>
-                  <Table.Row>
-                    <Table.Cell className="text-gray-500">Address Assigned</Table.Cell>
-                    <Table.Cell>
-                      {address.busyFrom ? prettyDate(address.busyFrom) : '-'}
-                    </Table.Cell>
-                  </Table.Row>
-                  <Table.Row>
-                    <Table.Cell className="text-gray-500">Expected Amount</Table.Cell>
-                    <Table.Cell>
-                      {invoice.coinAmount10pow10 
-                        ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                        : '-'}
-                    </Table.Cell>
-                  </Table.Row>
-                  <Table.Row>
-                    <Table.Cell className="text-gray-500">Received Amount</Table.Cell>
-                    <Table.Cell>
-                      {totalReceived > 0 
-                        ? `${(totalReceived / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                        : 'None'}
-                    </Table.Cell>
-                  </Table.Row>
-                  {paymentPercentage !== null && (
+              {/* Desktop Table View */}
+              <div className="hidden sm:block">
+                <Table.Root>
+                  <Table.Body>
                     <Table.Row>
-                      <Table.Cell className="text-gray-500">Payment %</Table.Cell>
-                      <Table.Cell>
-                        <span className={
-                          paymentPercentage > maxAcceptablePercentage 
-                            ? 'text-purple-600 font-bold' 
-                            : paymentPercentage < minAcceptablePercentage 
-                              ? 'text-red-600 font-bold' 
-                              : 'text-green-600'
-                        }>
-                          {paymentPercentage.toFixed(1)}%
-                        </span>
+                      <Table.Cell className="text-gray-500">Payment Address</Table.Cell>
+                      <Table.Cell className="font-mono text-xs break-all">
+                        {address.address}
                       </Table.Cell>
                     </Table.Row>
-                  )}
-                </Table.Body>
-              </Table.Root>
+                    <Table.Row>
+                      <Table.Cell className="text-gray-500">Address Assigned</Table.Cell>
+                      <Table.Cell>
+                        {address.busyFrom ? prettyDate(address.busyFrom) : '-'}
+                      </Table.Cell>
+                    </Table.Row>
+                    <Table.Row>
+                      <Table.Cell className="text-gray-500">Expected Amount</Table.Cell>
+                      <Table.Cell>
+                        {invoice.coinAmount10pow10 
+                          ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                          : '-'}
+                      </Table.Cell>
+                    </Table.Row>
+                    <Table.Row>
+                      <Table.Cell className="text-gray-500">Received Amount</Table.Cell>
+                      <Table.Cell>
+                        {totalReceived > 0 
+                          ? `${(totalReceived / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                          : 'None'}
+                      </Table.Cell>
+                    </Table.Row>
+                    {paymentPercentage !== null && (
+                      <Table.Row>
+                        <Table.Cell className="text-gray-500">Payment %</Table.Cell>
+                        <Table.Cell>
+                          <span className={
+                            paymentPercentage > maxAcceptablePercentage 
+                              ? 'text-purple-600 font-bold' 
+                              : paymentPercentage < minAcceptablePercentage 
+                                ? 'text-red-600 font-bold' 
+                                : 'text-green-600'
+                          }>
+                            {paymentPercentage.toFixed(1)}%
+                          </span>
+                        </Table.Cell>
+                      </Table.Row>
+                    )}
+                  </Table.Body>
+                </Table.Root>
+              </div>
+
+              {/* Mobile List View */}
+              <div className="sm:hidden space-y-3">
+                <div className="py-2 border-b">
+                  <div className="text-gray-500 mb-1">Payment Address</div>
+                  <div className="font-mono text-xs break-all">
+                    {address.address}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-gray-500">Address Assigned</span>
+                  <span>{address.busyFrom ? prettyDate(address.busyFrom) : '-'}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-gray-500">Expected</span>
+                  <span className="text-right">
+                    {invoice.coinAmount10pow10 
+                      ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                      : '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-gray-500">Received</span>
+                  <span className={totalReceived > 0 ? 'text-green-600' : ''}>
+                    {totalReceived > 0 
+                      ? `${(totalReceived / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                      : 'None'}
+                  </span>
+                </div>
+                {paymentPercentage !== null && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-500">Payment %</span>
+                    <span className={
+                      paymentPercentage > maxAcceptablePercentage 
+                        ? 'text-purple-600 font-bold' 
+                        : paymentPercentage < minAcceptablePercentage 
+                          ? 'text-red-600 font-bold' 
+                          : 'text-green-600'
+                    }>
+                      {paymentPercentage.toFixed(1)}%
+                    </span>
+                  </div>
+                )}
+              </div>
               
               {/* Balance Changes */}
               {balanceChanges.length > 0 && (
                 <>
                   <Separator size="4" my="4" />
                   <Heading size="3" mb="2">Balance Changes</Heading>
-                  <Table.Root>
-                    <Table.Header>
-                      <Table.Row>
-                        <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>Amount</Table.ColumnHeaderCell>
-                      </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                      {balanceChanges.map((bc) => (
-                        <Table.Row key={bc.id}>
-                          <Table.Cell className="text-gray-500 text-sm">
-                            {prettyDate(bc.createdAt)}
-                          </Table.Cell>
-                          <Table.Cell className={
-                            bc.balanceChange10pow10 > 0 ? 'text-green-600' : 'text-red-600'
-                          }>
-                            {bc.balanceChange10pow10 > 0 ? '+' : ''}
-                            {(bc.balanceChange10pow10 / 10**10).toFixed(8)} {(invoice.coinCode || '').toUpperCase()}
-                          </Table.Cell>
+                  
+                  {/* Desktop Table */}
+                  <div className="hidden sm:block">
+                    <Table.Root>
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
+                          <Table.ColumnHeaderCell>Amount</Table.ColumnHeaderCell>
                         </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table.Root>
+                      </Table.Header>
+                      <Table.Body>
+                        {balanceChanges.map((bc) => (
+                          <Table.Row key={bc.id}>
+                            <Table.Cell className="text-gray-500 text-sm">
+                              {prettyDate(bc.createdAt)}
+                            </Table.Cell>
+                            <Table.Cell className={
+                              bc.balanceChange10pow10 > 0 ? 'text-green-600' : 'text-red-600'
+                            }>
+                              {bc.balanceChange10pow10 > 0 ? '+' : ''}
+                              {(bc.balanceChange10pow10 / 10**10).toFixed(8)} {(invoice.coinCode || '').toUpperCase()}
+                            </Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="sm:hidden space-y-2">
+                    {balanceChanges.map((bc) => (
+                      <div key={bc.id} className="bg-gray-50 rounded p-3 flex justify-between items-center">
+                        <span className="text-gray-500 text-sm">{prettyDate(bc.createdAt)}</span>
+                        <span className={
+                          bc.balanceChange10pow10 > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'
+                        }>
+                          {bc.balanceChange10pow10 > 0 ? '+' : ''}
+                          {(bc.balanceChange10pow10 / 10**10).toFixed(8)} {(invoice.coinCode || '').toUpperCase()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </>
               )}
             </>
@@ -259,7 +378,7 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
             <Text color="gray">No payment address assigned yet.</Text>
           )}
         </Card>
-      </Flex>
+      </div>
     </Box>
   );
 }

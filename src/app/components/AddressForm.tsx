@@ -12,13 +12,22 @@ export default function AddressForm() {
       router.refresh();
       router.push('/addresses');
     }}>
-      <div className="flex flex-col gap-2">
-        <TextArea name="addresses" required placeholder="Wallet addresses (one per line)"/>
-        <div className="">
-          <CryptoCards name="code" defaultValue={'btc'} allowedCoins={['btc','bch','eth','ltc']} desktopCols={4} />
+      <div className="flex flex-col gap-3">
+        <div>
+          <label className="block mb-1 text-sm font-medium">Wallet addresses:</label>
+          <TextArea 
+            name="addresses" 
+            required 
+            placeholder="Wallet addresses (one per line)"
+            className="w-full min-h-[150px]"
+          />
         </div>
         <div>
-          <Button>Add</Button>
+          <label className="block mb-2 text-sm font-medium">Select cryptocurrency:</label>
+          <CryptoCards name="code" defaultValue={'btc'} allowedCoins={['btc','bch','eth','ltc']} desktopCols={2} />
+        </div>
+        <div>
+          <Button className="w-full sm:w-auto">Add</Button>
         </div>
       </div>
     </form>

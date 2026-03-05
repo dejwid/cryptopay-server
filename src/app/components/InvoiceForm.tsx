@@ -21,39 +21,45 @@ export default function InvoiceForm({invoice}:{invoice?:Invoice}) {
           router.push('/invoices');
           router.refresh();
         }}
-        className="flex flex-col gap-2">
+        className="flex flex-col gap-3">
         {invoice && (
           <input type="hidden" name="invoiceId" value={invoice.id} />
         )}
         <div>
-        Name:
+          <label className="block mb-1 text-sm font-medium">Name:</label>
           <TextField.Root
             defaultValue={invoice?.title || ''}
             name="name"
             autoComplete="off"
-            required />
+            required
+            className="w-full"
+          />
         </div>
         <div>
-          Amount (USD):
+          <label className="block mb-1 text-sm font-medium">Amount (USD):</label>
           <TextField.Root
             name="amount"
             type="number"
             defaultValue={invoice ? invoice.usdAmountCents / 100 : ''}
-            required />
+            required
+            className="w-full"
+          />
         </div>
         {!invoice?.productId && (
           <>
-            <label className="flex gap-2 my-2 items-center">
+            <label className="flex gap-2 my-2 items-center py-2">
               <Switch
                 defaultChecked={invoice?.editableCoinCode ?? true}
                 onCheckedChange={setEditableCoin}
                 name="editableCoinCode"
                 value="y"
                 size="3"/>
-              <span>Payer can choose cryptocurrency</span>
+              <span className="text-sm">Payer can choose cryptocurrency</span>
             </label>
             <div className="mb-2">
-              <div className="mb-2">{editableCoin ? 'Allowed coins' : 'Payment coin'}:</div>
+              <div className="block mb-2 text-sm font-medium">
+                {editableCoin ? 'Allowed coins:' : 'Payment coin:'}
+              </div>
               <CryptoCards
                 multiple={editableCoin}
                 name={editableCoin ? 'allowedCoins' : 'coinCode'}
@@ -63,7 +69,7 @@ export default function InvoiceForm({invoice}:{invoice?:Invoice}) {
             </div>
           </>
         )}
-        <SubmitButton>Save</SubmitButton>
+        <SubmitButton className="w-full sm:w-auto mt-2">Save</SubmitButton>
       </form>
     </>
   );

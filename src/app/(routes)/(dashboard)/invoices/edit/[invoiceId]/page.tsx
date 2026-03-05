@@ -12,7 +12,7 @@ export default async function EditInvoicePage({
   const invoice = await prisma.invoice.findFirstOrThrow({where:{id:invoiceId}});
   return (
     <div>
-      <Heading className="mb-4">Edit invoice: {invoice.title}</Heading>
+      <Heading className="mb-4 break-words">Edit invoice: {invoice.title}</Heading>
       <InvoiceForm invoice={invoice} />
     </div>
   );

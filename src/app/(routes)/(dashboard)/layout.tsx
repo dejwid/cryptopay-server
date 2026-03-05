@@ -31,14 +31,14 @@ export default async function RootLayout({
                 <DashboardNav/>
               </header>
             )}
-            <main className="container py-8">
+            <main className="container px-4 py-4 md:py-8">
               {(session && userAllowed) && (
-                <div className="p-6 border shadow rounded-lg bg-white">
+                <div className="p-3 md:p-6 border shadow rounded-lg bg-white">
                   {children}
                 </div>
               )}
               {(session && !userAllowed) && (
-                <div className="max-w-2xl mx-auto">
+                <div className="max-w-2xl mx-auto px-4">
                   <h1 className="text-2xl mb-4">Hey there! 🎉</h1>
                   <p className="mb-2">Thanks for trying to log in!<br/>However, it looks like this app was set up for a specific Google
                     account.</p>
@@ -60,7 +60,7 @@ export default async function RootLayout({
                 </div>
               )}
               {!session && (
-                <div className="max-w-md mx-auto">
+                <div className="max-w-md mx-auto px-4">
                   <Login/>
                 </div>
               )}
