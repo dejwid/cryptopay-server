@@ -35,10 +35,16 @@ export default async function AddressDetailPage({ params }: { params: { addressI
   });
   
   // Get current invoice assigned to this address (if busy)
-  const currentInvoice = address.invoiceId 
-    ? await prisma.invoice.findFirst({ 
-        where: { id: address.invoiceId },
-        include: { product: true }
+  const currentInvoice = address.invoiceId
+    ? await prisma.invoice.findFirst({
+        where: { id: address.invoiceId }
+      })
+    : null;
+  
+  // Get product for the current invoice if it exists
+  const currentProduct = currentInvoice?.productId
+    ? await prisma.product.findFirst({
+        where: { id: currentInvoice.productId }
       })
     : null;
   
@@ -204,10 +210,10 @@ export default async function AddressDetailPage({ params }: { params: { addressI
                         </Link>
                       </Table.Cell>
                     </Table.Row>
-                    {currentInvoice.product && (
+                    {currentProduct && (
                       <Table.Row>
                         <Table.Cell className="text-gray-500">Product</Table.Cell>
-                        <Table.Cell>{currentInvoice.product.name}</Table.Cell>
+                        <Table.Cell>{currentProduct.name}</Table.Cell>
                       </Table.Row>
                     )}
                     <Table.Row>
