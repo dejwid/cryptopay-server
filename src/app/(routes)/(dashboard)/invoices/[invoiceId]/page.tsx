@@ -2,12 +2,13 @@ import { userEmailOrThrow } from "@/app/actions/actions";
 import { prisma } from "@/libs/db";
 import { notFound } from "next/navigation";
 import { Box, Card, Flex, Heading, Table, Text, Badge, Separator } from "@radix-ui/themes";
-import { BadgeCheck, AlertTriangleIcon, ClockIcon, ArrowLeftIcon, CheckCircle2Icon, XCircleIcon } from "lucide-react";
+import { ClockIcon, ArrowLeftIcon, CheckCircle2Icon, XCircleIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@radix-ui/themes";
 import { prettyDate } from "@/libs/dates";
 import ManuallyApproveInvoiceButton from "@/app/components/ManuallyApproveInvoiceButton";
 import InvoiceEmailActions from "@/app/components/InvoiceEmailActions";
+import { PaymentStatusBadge } from "@/app/components/PaymentStatusBadge";
 import { maxPaymentShortfall } from "@/libs/config";
 
 // Calculate thresholds: 90-110% is acceptable (using maxPaymentShortfall = 0.1)
@@ -73,25 +74,6 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
     orderBy: { createdAt: 'desc' },
   });
   
-  const getPaymentStatus = () => {
-    if (invoice.paidAt) {
-      return { label: "Paid", color: "green" as const, icon: BadgeCheck, textColor: "text-green-600" };
-    }
-    if (!paymentPercentage || totalReceived === 0) {
-      return { label: "No payment detected", color: "red" as const, icon: AlertTriangleIcon, textColor: "text-red-600" };
-    }
-    if (paymentPercentage > maxAcceptablePercentage) {
-      return { label: "Overpaid", color: "purple" as const, icon: BadgeCheck, textColor: "text-purple-600" };
-    }
-    if (paymentPercentage >= minAcceptablePercentage) {
-      return { label: "Acceptable", color: "green" as const, icon: BadgeCheck, textColor: "text-green-600" };
-    }
-    return { label: "Underpaid", color: "red" as const, icon: AlertTriangleIcon, textColor: "text-red-600" };
-  };
-  
-  const status = getPaymentStatus();
-  const StatusIcon = status.icon;
-  
   return (
     <Box>
       <Flex gap="3" align="center" mb="4">
@@ -115,20 +97,18 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
           <div className="hidden sm:block">
             <Table.Root>
               <Table.Body>
-                <Table.Row>
-                  <Table.Cell className="text-gray-500">Status</Table.Cell>
-                  <Table.Cell>
-                    <Flex gap="2" align="center">
-                      <Text color={status.color}>
-                        <StatusIcon className="w-4 h-4 inline mr-1" />
-                        {status.label}
-                      </Text>
-                      {invoice.manuallyApprovedAt && (
-                        <Badge color="orange">manual approval</Badge>
-                      )}
-                    </Flex>
-                  </Table.Cell>
-                </Table.Row>
+                 <Table.Row>
+                   <Table.Cell className="text-gray-500">Status</Table.Cell>
+                   <Table.Cell>
+                     <PaymentStatusBadge
+                       paidAt={invoice.paidAt}
+                       manuallyApprovedAt={invoice.manuallyApprovedAt}
+                       receivedAmount10pow10={totalReceived > 0 ? totalReceived : null}
+                       paymentPercentage={paymentPercentage}
+                       coinCode={invoice.coinCode}
+                     />
+                   </Table.Cell>
+                 </Table.Row>
                 <Table.Row>
                   <Table.Cell className="text-gray-500">Payer Email</Table.Cell>
                   <Table.Cell className="break-all">{invoice.payerEmail || '-'}</Table.Cell>
@@ -173,17 +153,15 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
           {/* Mobile List View */}
           <div className="sm:hidden space-y-3">
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-500">Status</span>
-              <Flex gap="2" align="center">
-                <Text color={status.color}>
-                  <StatusIcon className="w-4 h-4 inline mr-1" />
-                  {status.label}
-                </Text>
-                {invoice.manuallyApprovedAt && (
-                  <Badge color="orange">manual</Badge>
-                )}
-              </Flex>
-            </div>
+               <span className="text-gray-500">Status</span>
+               <PaymentStatusBadge
+                 paidAt={invoice.paidAt}
+                 manuallyApprovedAt={invoice.manuallyApprovedAt}
+                 receivedAmount10pow10={totalReceived > 0 ? totalReceived : null}
+                 paymentPercentage={paymentPercentage}
+                 coinCode={invoice.coinCode}
+               />
+             </div>
             <div className="flex justify-between items-start py-2 border-b">
               <span className="text-gray-500">Payer Email</span>
               <span className="text-right break-all max-w-[60%]">{invoice.payerEmail || '-'}</span>
@@ -395,6 +373,11 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
             payerEmail={invoice.payerEmail}
             payeeEmail={invoice.payeeEmail}
             hasProduct={!!invoice.productId}
+            invoiceTitle={invoice.title}
+            coinAmount10pow10={invoice.coinAmount10pow10}
+            coinCode={invoice.coinCode}
+            usdAmountCents={invoice.usdAmountCents}
+            manuallyApprovedAt={invoice.manuallyApprovedAt}
           />
         </div>
       )}

@@ -3,77 +3,17 @@
 import {prettyDate} from "@/libs/dates";
 import {Invoice} from "@prisma/client";
 import {Button, Table, Text} from "@radix-ui/themes";
-import {BadgeAlert, BadgeCheck, ClockIcon, Pen, ShareIcon, AlertTriangleIcon, MoreVertical} from "lucide-react";
+import {ClockIcon, Pen, ShareIcon, MoreVertical} from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import ManuallyApproveInvoiceButton from "./ManuallyApproveInvoiceButton";
 import {InvoiceWithPaymentStatus} from "./DashboardInvoices";
-import {maxPaymentShortfall} from "@/libs/config";
+import {PaymentStatusBadge} from "./PaymentStatusBadge";
 
 interface InvoiceWithExtras extends Invoice {
   receivedAmount10pow10: number | null;
   paymentPercentage: number | null;
 }
-
-// Calculate thresholds: 90-110% is acceptable (using maxPaymentShortfall = 0.1)
-const minAcceptablePercentage = (1 - maxPaymentShortfall) * 100; // 90%
-const maxAcceptablePercentage = (1 + maxPaymentShortfall) * 100; // 110%
-
-const PaymentStatusBadge = ({ invoice }: { invoice: InvoiceWithExtras }) => {
-  if (invoice.paidAt) {
-    return (
-      <Text color="green" className="flex gap-1 items-center">
-        <BadgeCheck className="w-4 h-4" />
-        Paid
-        {invoice.manuallyApprovedAt && (
-          <span className="text-xs bg-orange-100 text-orange-700 px-1 rounded ml-1">manual</span>
-        )}
-      </Text>
-    );
-  }
-  
-  if (invoice.receivedAmount10pow10 !== null && invoice.receivedAmount10pow10 > 0) {
-    return (
-      <div className="flex flex-col gap-1">
-        {invoice.paymentPercentage! > maxAcceptablePercentage ? (
-          <Text className="flex gap-1 items-center text-purple-600">
-            <BadgeCheck className="w-4 h-4" />
-            Overpaid
-          </Text>
-        ) : invoice.paymentPercentage! >= minAcceptablePercentage ? (
-          <Text color="green" className="flex gap-1 items-center">
-            <BadgeCheck className="w-4 h-4" />
-            Acceptable
-          </Text>
-        ) : (
-          <Text color="red" className="flex gap-1 items-center">
-            <AlertTriangleIcon className="w-4 h-4" />
-            Underpaid
-          </Text>
-        )}
-        <Text size="1" className="text-gray-600">
-          {(invoice.receivedAmount10pow10 / 10**10).toFixed(8)} {invoice.coinCode?.toUpperCase()}
-        </Text>
-        <Text size="1" className={
-          invoice.paymentPercentage! > maxAcceptablePercentage 
-            ? "text-purple-600 font-bold" 
-            : invoice.paymentPercentage! < minAcceptablePercentage 
-              ? "text-red-600 font-bold" 
-              : "text-green-600"
-        }>
-          {invoice.paymentPercentage!.toFixed(1)}%
-        </Text>
-      </div>
-    );
-  }
-  
-  return (
-    <Text color="red" className="flex gap-1 items-center">
-      <BadgeAlert className="w-4 h-4" />
-      No payment
-    </Text>
-  );
-};
 
 export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}) {
   return (
@@ -103,7 +43,13 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
                 </Table.Cell>
                 <Table.Cell>
                   <Link href={`/invoices/${invoice.id}`} className="hover:opacity-80 transition-opacity block">
-                    <PaymentStatusBadge invoice={invoice} />
+                    <PaymentStatusBadge
+                      paidAt={invoice.paidAt}
+                      manuallyApprovedAt={invoice.manuallyApprovedAt}
+                      receivedAmount10pow10={invoice.receivedAmount10pow10}
+                      paymentPercentage={invoice.paymentPercentage}
+                      coinCode={invoice.coinCode}
+                    />
                   </Link>
                 </Table.Cell>
                 <Table.Cell>
@@ -157,7 +103,13 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
                 <p className="text-gray-500 text-sm truncate">{invoice.payerEmail}</p>
               </div>
               <div className="ml-2">
-                <PaymentStatusBadge invoice={invoice} />
+                <PaymentStatusBadge
+                  paidAt={invoice.paidAt}
+                  manuallyApprovedAt={invoice.manuallyApprovedAt}
+                  receivedAmount10pow10={invoice.receivedAmount10pow10}
+                  paymentPercentage={invoice.paymentPercentage}
+                  coinCode={invoice.coinCode}
+                />
               </div>
             </div>
             
