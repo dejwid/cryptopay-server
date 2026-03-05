@@ -1,7 +1,7 @@
 import { userEmailOrThrow } from "@/app/actions/actions";
 import { prisma } from "@/libs/db";
 import { notFound } from "next/navigation";
-import { Box, Card, Flex, Heading, Table, Text, Badge, Separator } from "@radix-ui/themes";
+import { Box, Flex, Heading, Table, Text, Badge } from "@radix-ui/themes";
 import { ClockIcon, ArrowLeftIcon, CheckCircle2Icon, XCircleIcon, PenIcon, ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@radix-ui/themes";
@@ -11,9 +11,8 @@ import InvoiceEmailActions from "@/app/components/InvoiceEmailActions";
 import { PaymentStatusBadge } from "@/app/components/PaymentStatusBadge";
 import { maxPaymentShortfall } from "@/libs/config";
 
-// Calculate thresholds: 90-110% is acceptable (using maxPaymentShortfall = 0.1)
-const minAcceptablePercentage = (1 - maxPaymentShortfall) * 100; // 90%
-const maxAcceptablePercentage = (1 + maxPaymentShortfall) * 100; // 110%
+const minAcceptablePercentage = (1 - maxPaymentShortfall) * 100;
+const maxAcceptablePercentage = (1 + maxPaymentShortfall) * 100;
 
 export default async function InvoiceDetailPage({ params }: { params: { invoiceId: string } }) {
   const email = await userEmailOrThrow();
@@ -27,18 +26,15 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
     notFound();
   }
   
-  // Fetch product separately if productId exists
   const product = invoice.productId 
     ? await prisma.product.findFirst({ where: { id: invoice.productId } })
     : null;
   
-  // Find the address assigned to this invoice
   const address = await prisma.address.findFirst({
     where: { invoiceId: invoice.id },
     orderBy: { busyFrom: 'desc' },
   });
   
-  // Get balance changes for this address during the busy period
   let balanceChanges: Array<{
     id: string;
     balanceChange10pow10: number;
@@ -68,342 +64,162 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
     }
   }
 
-  // Get email logs for this invoice
   const emailLogs = await prisma.emailLog.findMany({
     where: { invoiceId: invoice.id },
     orderBy: { createdAt: 'desc' },
   });
   
   return (
-    <Box>
+    <Box className="p-4">
       <Flex gap="3" align="center" mb="4">
         <Link href="/invoices">
           <Button variant="ghost" size="1">
             <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">Back to invoices</span>
-            <span className="sm:hidden">Back</span>
           </Button>
         </Link>
+        <div className="flex-1">
+          <Heading size="5" className="break-words">{invoice.title}</Heading>
+          <Text size="2" color="gray">Invoice details</Text>
+        </div>
       </Flex>
       
-      <Heading size="6" mb="4" className="break-words">Invoice: {invoice.title}</Heading>
-      
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        {/* Invoice Details Card */}
-        <Card size="3">
-          <Heading size="4" mb="3">Invoice Details</Heading>
-          
-          {/* Desktop Table View */}
-          <div className="hidden sm:block">
-            <Table.Root>
-              <Table.Body>
-                 <Table.Row>
-                   <Table.Cell className="text-gray-500">Status</Table.Cell>
-                   <Table.Cell>
-                     <PaymentStatusBadge
-                       paidAt={invoice.paidAt}
-                       manuallyApprovedAt={invoice.manuallyApprovedAt}
-                       receivedAmount10pow10={totalReceived > 0 ? totalReceived : null}
-                       paymentPercentage={paymentPercentage}
-                       coinCode={invoice.coinCode}
-                     />
-                   </Table.Cell>
-                 </Table.Row>
-                <Table.Row>
-                  <Table.Cell className="text-gray-500">Payer Email</Table.Cell>
-                  <Table.Cell className="break-all">{invoice.payerEmail || '-'}</Table.Cell>
-                </Table.Row>
-                <Table.Row>
-                   <Table.Cell className="text-gray-500">Product</Table.Cell>
-                   <Table.Cell>
-                     {product ? (
-                       <Link href={`/products/${product.id}`} className="text-blue-600 hover:underline">
-                         {product.name}
-                       </Link>
-                     ) : '-'}
-                   </Table.Cell>
-                 </Table.Row>
-                <Table.Row>
-                  <Table.Cell className="text-gray-500">USD Amount</Table.Cell>
-                  <Table.Cell>${(invoice.usdAmountCents / 100).toFixed(2)}</Table.Cell>
-                </Table.Row>
-                <Table.Row>
-                  <Table.Cell className="text-gray-500">Crypto Amount</Table.Cell>
-                  <Table.Cell>
-                    {invoice.coinAmount10pow10 
-                      ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                      : 'Not selected'}
-                  </Table.Cell>
-                </Table.Row>
-                <Table.Row>
-                  <Table.Cell className="text-gray-500">Created</Table.Cell>
-                  <Table.Cell>
-                    <Flex gap="1" align="center">
-                      <ClockIcon className="w-4 h-4 text-gray-400" />
-                      {prettyDate(invoice.createdAt)}
-                    </Flex>
-                  </Table.Cell>
-                </Table.Row>
-                {invoice.paidAt && (
-                  <Table.Row>
-                    <Table.Cell className="text-gray-500">Paid At</Table.Cell>
-                    <Table.Cell>
-                      <Text color="green">{prettyDate(invoice.paidAt)}</Text>
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-              </Table.Body>
-            </Table.Root>
+      {/* Invoice Info */}
+      <div className="mb-6">
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <Text size="2" color="gray">Status</Text>
+            <div className="mt-1">
+              <PaymentStatusBadge
+                paidAt={invoice.paidAt}
+                manuallyApprovedAt={invoice.manuallyApprovedAt}
+                receivedAmount10pow10={totalReceived > 0 ? totalReceived : null}
+                paymentPercentage={paymentPercentage}
+                coinCode={invoice.coinCode}
+              />
+            </div>
           </div>
-
-          {/* Mobile List View */}
-          <div className="sm:hidden space-y-3">
-            <div className="flex justify-between items-center py-2 border-b">
-               <span className="text-gray-500">Status</span>
-               <PaymentStatusBadge
-                 paidAt={invoice.paidAt}
-                 manuallyApprovedAt={invoice.manuallyApprovedAt}
-                 receivedAmount10pow10={totalReceived > 0 ? totalReceived : null}
-                 paymentPercentage={paymentPercentage}
-                 coinCode={invoice.coinCode}
-               />
-             </div>
-            <div className="flex justify-between items-start py-2 border-b">
-              <span className="text-gray-500">Payer Email</span>
-              <span className="text-right break-all max-w-[60%]">{invoice.payerEmail || '-'}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-               <span className="text-gray-500">Product</span>
-               {product ? (
-                 <Link href={`/products/${product.id}`} className="text-blue-600 hover:underline">
-                   {product.name}
-                 </Link>
-               ) : (
-                 <span>-</span>
-               )}
-             </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-500">USD Amount</span>
-              <span className="font-medium">${(invoice.usdAmountCents / 100).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-500">Crypto</span>
-              <span className="text-right">
-                {invoice.coinAmount10pow10 
-                  ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                  : 'Not selected'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-500">Created</span>
-              <Flex gap="1" align="center">
-                <ClockIcon className="w-4 h-4 text-gray-400" />
-                {prettyDate(invoice.createdAt)}
-              </Flex>
-            </div>
-            {invoice.paidAt && (
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-gray-500">Paid At</span>
-                <Text color="green">{prettyDate(invoice.paidAt)}</Text>
-              </div>
-            )}
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <Text size="2" color="gray">USD Amount</Text>
+            <div className="text-lg font-semibold">${(invoice.usdAmountCents / 100).toFixed(2)}</div>
           </div>
-          
-          <Box mt="4">
-            <Flex gap="2" wrap="wrap">
-              {!invoice.paidAt && (
-                <>
-                  <ManuallyApproveInvoiceButton
-                    invoiceId={invoice.id}
-                    invoiceTitle={invoice.title}
-                  />
-                  <Link href={'/invoices/edit/'+invoice.id}>
-                    <Button variant="outline" size="1">
-                      <PenIcon className="w-4 h-4" />
-                      Edit
-                    </Button>
-                  </Link>
-                </>
-              )}
-              <Link href={'/invoice/'+invoice.id} target="_blank">
-                <Button variant="surface" size="1">
-                  <ExternalLinkIcon className="w-4 h-4" />
-                  Pay Page
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <Text size="2" color="gray">Crypto</Text>
+            <div className="text-sm font-medium">
+              {invoice.coinAmount10pow10 
+                ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                : 'Not selected'}
+            </div>
+          </div>
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <Text size="2" color="gray">Payer</Text>
+            <div className="text-sm font-medium truncate">{invoice.payerEmail || '-'}</div>
+          </div>
+        </div>
+        
+        {product && (
+          <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <Text size="2" color="gray">Product</Text>
+            <Link href={`/products/${product.id}`} className="text-blue-600 hover:underline block mt-1">
+              {product.name}
+            </Link>
+          </div>
+        )}
+        
+        <Flex gap="2" wrap="wrap">
+          {!invoice.paidAt && (
+            <>
+              <ManuallyApproveInvoiceButton
+                invoiceId={invoice.id}
+                invoiceTitle={invoice.title}
+              />
+              <Link href={'/invoices/edit/'+invoice.id}>
+                <Button variant="outline" size="2">
+                  <PenIcon className="w-4 h-4" />
+                  Edit
                 </Button>
               </Link>
-            </Flex>
-          </Box>
-        </Card>
-        
-        {/* Payment Details Card */}
-        <Card size="3">
-          <Heading size="4" mb="3">Payment Details</Heading>
+            </>
+          )}
+          <Link href={'/invoice/'+invoice.id} target="_blank">
+            <Button variant="surface" size="2">
+              <ExternalLinkIcon className="w-4 h-4" />
+              Pay Page
+            </Button>
+          </Link>
+        </Flex>
+      </div>
+      
+      {/* Payment Details */}
+      {address && (
+        <div className="mb-6">
+          <Heading size="4" mb="3">Payment</Heading>
           
-          {address ? (
-            <>
-              {/* Desktop Table View */}
-               <div className="hidden sm:block">
-                 <Table.Root>
-                   <Table.Body>
-                     <Table.Row>
-                       <Table.Cell className="text-gray-500">Payment Address</Table.Cell>
-                       <Table.Cell>
-                        <Link 
-                          href={`/addresses/${address.id}`}
-                          className="font-mono text-xs break-all text-blue-600 hover:underline"
-                        >
-                          {address.address}
-                        </Link>
-                       </Table.Cell>
-                     </Table.Row>
-                    <Table.Row>
-                      <Table.Cell className="text-gray-500">Address Assigned</Table.Cell>
-                      <Table.Cell>
-                        {address.busyFrom ? prettyDate(address.busyFrom) : '-'}
-                      </Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                      <Table.Cell className="text-gray-500">Expected Amount</Table.Cell>
-                      <Table.Cell>
-                        {invoice.coinAmount10pow10 
-                          ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                          : '-'}
-                      </Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                      <Table.Cell className="text-gray-500">Received Amount</Table.Cell>
-                      <Table.Cell>
-                        {totalReceived > 0 
-                          ? `${(totalReceived / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                          : 'None'}
-                      </Table.Cell>
-                    </Table.Row>
-                    {paymentPercentage !== null && (
-                      <Table.Row>
-                        <Table.Cell className="text-gray-500">Payment %</Table.Cell>
-                        <Table.Cell>
-                          <span className={
-                            paymentPercentage > maxAcceptablePercentage 
-                              ? 'text-purple-600 font-bold' 
-                              : paymentPercentage < minAcceptablePercentage 
-                                ? 'text-red-600 font-bold' 
-                                : 'text-green-600'
-                          }>
-                            {paymentPercentage.toFixed(1)}%
-                          </span>
-                        </Table.Cell>
-                      </Table.Row>
-                    )}
-                  </Table.Body>
-                </Table.Root>
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg mb-3">
+            <Text size="2" color="gray">Address</Text>
+            <Link 
+              href={`/addresses/${address.id}`}
+              className="font-mono text-xs break-all text-blue-600 hover:underline block mt-1"
+            >
+              {address.address}
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Text size="2" color="gray">Expected</Text>
+              <div className="text-sm font-medium">
+                {invoice.coinAmount10pow10 
+                  ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                  : '-'}
               </div>
-
-              {/* Mobile List View */}
-               <div className="sm:hidden space-y-3">
-                 <div className="py-2 border-b">
-                   <div className="text-gray-500 mb-1">Payment Address</div>
-                   <Link 
-                     href={`/addresses/${address.id}`}
-                     className="font-mono text-xs break-all text-blue-600 hover:underline"
-                   >
-                     {address.address}
-                   </Link>
-                 </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-500">Address Assigned</span>
-                  <span>{address.busyFrom ? prettyDate(address.busyFrom) : '-'}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-500">Expected</span>
-                  <span className="text-right">
-                    {invoice.coinAmount10pow10 
-                      ? `${(invoice.coinAmount10pow10 / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                      : '-'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-500">Received</span>
-                  <span className={totalReceived > 0 ? 'text-green-600' : ''}>
-                    {totalReceived > 0 
-                      ? `${(totalReceived / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
-                      : 'None'}
-                  </span>
-                </div>
-                {paymentPercentage !== null && (
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-gray-500">Payment %</span>
-                    <span className={
-                      paymentPercentage > maxAcceptablePercentage 
-                        ? 'text-purple-600 font-bold' 
-                        : paymentPercentage < minAcceptablePercentage 
-                          ? 'text-red-600 font-bold' 
-                          : 'text-green-600'
-                    }>
-                      {paymentPercentage.toFixed(1)}%
+            </div>
+            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Text size="2" color="gray">Received</Text>
+              <div className={`text-sm font-medium ${totalReceived > 0 ? 'text-green-600' : ''}`}>
+                {totalReceived > 0 
+                  ? `${(totalReceived / 10**10).toFixed(8)} ${(invoice.coinCode || '').toUpperCase()}`
+                  : 'None'}
+              </div>
+            </div>
+          </div>
+          
+          {paymentPercentage !== null && (
+            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg mb-3">
+              <Text size="2" color="gray">Payment %</Text>
+              <span className={`text-lg font-bold ${
+                paymentPercentage > maxAcceptablePercentage 
+                  ? 'text-purple-600' 
+                  : paymentPercentage < minAcceptablePercentage 
+                    ? 'text-red-600' 
+                    : 'text-green-600'
+              }`}>
+                {paymentPercentage.toFixed(1)}%
+              </span>
+            </div>
+          )}
+          
+          {balanceChanges.length > 0 && (
+            <div>
+              <Text size="2" color="gray" mb="2">Balance Changes</Text>
+              <div className="space-y-2">
+                {balanceChanges.map((bc) => (
+                  <div key={bc.id} className="p-2 border border-gray-200 dark:border-gray-800 rounded flex justify-between items-center">
+                    <span className="text-gray-500 text-sm">{prettyDate(bc.createdAt)}</span>
+                    <span className={`font-medium ${bc.balanceChange10pow10 > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {bc.balanceChange10pow10 > 0 ? '+' : ''}
+                      {(bc.balanceChange10pow10 / 10**10).toFixed(8)} {(invoice.coinCode || '').toUpperCase()}
                     </span>
                   </div>
-                )}
+                ))}
               </div>
-              
-              {/* Balance Changes */}
-              {balanceChanges.length > 0 && (
-                <>
-                  <Separator size="4" my="4" />
-                  <Heading size="3" mb="2">Balance Changes</Heading>
-                  
-                  {/* Desktop Table */}
-                  <div className="hidden sm:block">
-                    <Table.Root>
-                      <Table.Header>
-                        <Table.Row>
-                          <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
-                          <Table.ColumnHeaderCell>Amount</Table.ColumnHeaderCell>
-                        </Table.Row>
-                      </Table.Header>
-                      <Table.Body>
-                        {balanceChanges.map((bc) => (
-                          <Table.Row key={bc.id}>
-                            <Table.Cell className="text-gray-500 text-sm">
-                              {prettyDate(bc.createdAt)}
-                            </Table.Cell>
-                            <Table.Cell className={
-                              bc.balanceChange10pow10 > 0 ? 'text-green-600' : 'text-red-600'
-                            }>
-                              {bc.balanceChange10pow10 > 0 ? '+' : ''}
-                              {(bc.balanceChange10pow10 / 10**10).toFixed(8)} {(invoice.coinCode || '').toUpperCase()}
-                            </Table.Cell>
-                          </Table.Row>
-                        ))}
-                      </Table.Body>
-                    </Table.Root>
-                  </div>
-
-                  {/* Mobile Cards */}
-                  <div className="sm:hidden space-y-2">
-                    {balanceChanges.map((bc) => (
-                      <div key={bc.id} className="bg-gray-50 rounded p-3 flex justify-between items-center">
-                        <span className="text-gray-500 text-sm">{prettyDate(bc.createdAt)}</span>
-                        <span className={
-                          bc.balanceChange10pow10 > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'
-                        }>
-                          {bc.balanceChange10pow10 > 0 ? '+' : ''}
-                          {(bc.balanceChange10pow10 / 10**10).toFixed(8)} {(invoice.coinCode || '').toUpperCase()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <Text color="gray">No payment address assigned yet.</Text>
+            </div>
           )}
-        </Card>
-      </div>
+        </div>
+      )}
 
-      {/* Email Actions - only show for paid invoices */}
+      {/* Email Actions */}
       {invoice.paidAt && (
-        <div className="mt-4">
+        <div className="mb-6">
           <InvoiceEmailActions
             invoiceId={invoice.id}
             payerEmail={invoice.payerEmail}
@@ -418,75 +234,17 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
         </div>
       )}
 
-      {/* Email Logs for this invoice */}
+      {/* Email Logs */}
       {emailLogs.length > 0 && (
-        <Card size="3" className="mt-4">
+        <div>
           <Flex gap="2" align="center" mb="3">
             <Heading size="4">Email Log</Heading>
             <Badge color="gray" variant="soft">{emailLogs.length}</Badge>
           </Flex>
 
-          {/* Desktop Table */}
-          <div className="hidden sm:block">
-            <Table.Root>
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>To</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Subject</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Details</Table.ColumnHeaderCell>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {emailLogs.map((log) => (
-                  <Table.Row key={log.id}>
-                    <Table.Cell>
-                      {log.status === 'sent' ? (
-                        <Flex gap="1" align="center">
-                          <CheckCircle2Icon className="w-4 h-4 text-green-500" />
-                          <Badge color="green" variant="soft" size="1">Sent</Badge>
-                        </Flex>
-                      ) : (
-                        <Flex gap="1" align="center">
-                          <XCircleIcon className="w-4 h-4 text-red-500" />
-                          <Badge color="red" variant="soft" size="1">Failed</Badge>
-                        </Flex>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell className="text-sm text-gray-500 whitespace-nowrap">
-                      {prettyDate(log.createdAt)}
-                    </Table.Cell>
-                    <Table.Cell className="text-sm">{log.to.join(', ')}</Table.Cell>
-                    <Table.Cell className="text-sm">{log.subject}</Table.Cell>
-                    <Table.Cell>
-                      {log.error ? (
-                        <details>
-                          <summary className="text-xs text-red-600 cursor-pointer">Error</summary>
-                          <pre className="mt-1 bg-red-50 p-2 rounded text-xs text-red-700 max-w-xs overflow-auto">{log.error}</pre>
-                        </details>
-                      ) : log.mailgunResponse ? (
-                        <details>
-                          <summary className="text-xs text-gray-500 cursor-pointer">Response</summary>
-                          <pre className="mt-1 bg-gray-50 p-2 rounded text-xs text-gray-700 max-w-xs overflow-auto">
-                            {(() => {
-                              try { return JSON.stringify(JSON.parse(log.mailgunResponse!), null, 2); }
-                              catch { return log.mailgunResponse; }
-                            })()}
-                          </pre>
-                        </details>
-                      ) : '-'}
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="sm:hidden space-y-2">
+          <div className="space-y-2">
             {emailLogs.map((log) => (
-              <div key={log.id} className="bg-gray-50 rounded p-3">
+              <div key={log.id} className="p-3 border border-gray-200 dark:border-gray-800 rounded-lg">
                 <Flex justify="between" align="start" mb="1">
                   <Text size="2" weight="medium">{log.subject}</Text>
                   {log.status === 'sent' ? (
@@ -495,18 +253,17 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
                     <Badge color="red" variant="soft" size="1">Failed</Badge>
                   )}
                 </Flex>
-                <Text size="1" color="gray" className="block">{prettyDate(log.createdAt)}</Text>
-                <Text size="1" className="block">To: {log.to.join(', ')}</Text>
+                <Text size="1" color="gray">{prettyDate(log.createdAt)} • To: {log.to.join(', ')}</Text>
                 {log.error && (
-                  <details className="mt-1">
+                  <details className="mt-2">
                     <summary className="text-xs text-red-600 cursor-pointer">Error</summary>
-                    <pre className="mt-1 bg-red-50 p-1 rounded text-xs text-red-700 overflow-auto">{log.error}</pre>
+                    <pre className="mt-1 bg-red-50 dark:bg-red-950 p-2 rounded text-xs text-red-700 dark:text-red-300 overflow-auto">{log.error}</pre>
                   </details>
                 )}
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       )}
     </Box>
   );

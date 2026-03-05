@@ -1,6 +1,6 @@
 import { userEmailOrThrow } from "@/app/actions/actions";
 import { prisma } from "@/libs/db";
-import { Box, Card, Flex, Heading, Table, Text, Badge } from "@radix-ui/themes";
+import { Box, Flex, Heading, Table, Text, Badge } from "@radix-ui/themes";
 import { ClockIcon, PackageIcon, MailIcon, EyeIcon } from "lucide-react";
 import Link from "next/link";
 import { prettyDate } from "@/libs/dates";
@@ -26,69 +26,22 @@ export default async function AccessCodesPage() {
   // Create a product map for quick lookup
   const productMap = new Map(products.map(p => [p.id, p]));
   
-  // Group by product
-  const byProduct = accessCodes.reduce((acc, code) => {
-    const productId = code.productId;
-    const product = productMap.get(productId);
-    if (!acc[productId]) {
-      acc[productId] = {
-        product: product,
-        codes: []
-      };
-    }
-    acc[productId].codes.push(code);
-    return acc;
-  }, {} as Record<string, { product: typeof products[0] | undefined; codes: typeof accessCodes }>);
-  
   return (
-    <Box>
+    <Box className="p-4">
       <Flex gap="3" align="center" mb="4">
-        <Heading>Access Codes</Heading>
-        <Badge color="gray" variant="soft">{accessCodes.length} total</Badge>
+        <div>
+          <Heading size="5">Access Codes</Heading>
+          <Text size="2" color="gray">{accessCodes.length} total codes</Text>
+        </div>
       </Flex>
       
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <Card size="2">
-          <Flex direction="column" gap="1">
-            <Text size="2" color="gray">Total Codes</Text>
-            <Text size="6" weight="bold">{accessCodes.length}</Text>
-          </Flex>
-        </Card>
-        <Card size="2">
-          <Flex direction="column" gap="1">
-            <Text size="2" color="gray">Activated</Text>
-            <Text size="6" weight="bold" className="text-green-600">
-              {accessCodes.filter(c => c.activatedAt).length}
-            </Text>
-          </Flex>
-        </Card>
-        <Card size="2">
-          <Flex direction="column" gap="1">
-            <Text size="2" color="gray">Pending</Text>
-            <Text size="6" weight="bold" className="text-orange-600">
-              {accessCodes.filter(c => !c.activatedAt).length}
-            </Text>
-          </Flex>
-        </Card>
-        <Card size="2">
-          <Flex direction="column" gap="1">
-            <Text size="2" color="gray">Emailed</Text>
-            <Text size="6" weight="bold" className="text-blue-600">
-              {accessCodes.filter(c => c.emailedTo).length}
-            </Text>
-          </Flex>
-        </Card>
-      </div>
-      
       {/* Desktop Table */}
-      <Card size="3" className="hidden md:block">
-        <Heading size="4" mb="3">All Access Codes</Heading>
+      <div className="hidden md:block overflow-x-auto">
         <Table.Root>
           <Table.Header>
             <Table.Row>
               <Table.ColumnHeaderCell>Product</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Access Code</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Code</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Emailed To</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Created</Table.ColumnHeaderCell>
@@ -104,7 +57,7 @@ export default async function AccessCodesPage() {
                     className="text-blue-600 hover:underline flex items-center gap-2"
                   >
                     <PackageIcon className="w-4 h-4" />
-                    {code.product?.name || 'Unknown'}
+                    {productMap.get(code.productId)?.name || 'Unknown'}
                   </Link>
                 </Table.Cell>
                 <Table.Cell className="font-mono text-sm">
@@ -155,19 +108,19 @@ export default async function AccessCodesPage() {
             No access codes yet. Access codes are generated when invoices are paid.
           </Text>
         )}
-      </Card>
+      </div>
       
       {/* Mobile Cards */}
       <div className="md:hidden space-y-3">
         {accessCodes.map((code) => (
-          <Card key={code.id} size="2">
+          <div key={code.id} className="p-3 border border-gray-200 dark:border-gray-800 rounded-lg">
             <Flex justify="between" align="start" mb="2">
               <div>
                 <Link 
                   href={`/products/${code.productId}`}
                   className="font-medium hover:underline"
                 >
-                  {code.product?.name || 'Unknown'}
+                  {productMap.get(code.productId)?.name || 'Unknown'}
                 </Link>
                 <div className="font-mono text-sm text-gray-500 mt-1">
                   Code: {code.accessCode}
@@ -194,7 +147,7 @@ export default async function AccessCodesPage() {
               )}
             </Flex>
             
-            <div className="mt-2 pt-2 border-t">
+            <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
               <Link 
                 href={`/product/${code.productId}/${code.accessCode}`}
                 target="_blank"
@@ -204,45 +157,13 @@ export default async function AccessCodesPage() {
                 Preview
               </Link>
             </div>
-          </Card>
+          </div>
         ))}
         {accessCodes.length === 0 && (
           <Text color="gray" className="block text-center py-8">
             No access codes yet.
           </Text>
         )}
-      </div>
-      
-      {/* Grouped by Product */}
-      <div className="mt-6">
-        <Heading size="4" mb="3">By Product</Heading>
-        <div className="space-y-4">
-          {Object.values(byProduct).map(({ product, codes }) => (
-            <Card key={product.id} size="2">
-              <Flex justify="between" align="center" mb="2">
-                <Link 
-                  href={`/products/${product.id}`}
-                  className="font-medium flex items-center gap-2 hover:underline"
-                >
-                  <PackageIcon className="w-4 h-4" />
-                  {product.name}
-                </Link>
-                <Badge color="gray" variant="soft">{codes.length} codes</Badge>
-              </Flex>
-              <div className="flex gap-4 text-sm text-gray-500">
-                <span className="text-green-600">
-                  {codes.filter(c => c.activatedAt).length} activated
-                </span>
-                <span className="text-orange-600">
-                  {codes.filter(c => !c.activatedAt).length} pending
-                </span>
-                <span className="text-blue-600">
-                  {codes.filter(c => c.emailedTo).length} emailed
-                </span>
-              </div>
-            </Card>
-          ))}
-        </div>
       </div>
     </Box>
   );
