@@ -40,7 +40,11 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
                         </div>
                       </div>
                       <div>
-                        <BalanceRefresh addressId={address.id} />
+                        <BalanceRefresh
+                          addressId={address.id}
+                          address={address.address}
+                          code={address.code}
+                        />
                       </div>
                     </div>
                   </Table.Cell>
@@ -80,7 +84,11 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
                     {usdAmount === 0 ? 0 : '~'+usdAmount.toFixed(4)} USD
                   </div>
                 </div>
-                <BalanceRefresh addressId={address.id} />
+                <BalanceRefresh
+                  addressId={address.id}
+                  address={address.address}
+                  code={address.code}
+                />
               </div>
 
               <div className="flex justify-between text-sm text-gray-500 pt-3 border-t">
