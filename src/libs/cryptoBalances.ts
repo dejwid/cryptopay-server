@@ -39,7 +39,8 @@ export const balanceSources:BalanceSource[] = [
     supportedCoins: ['btc', 'bch', 'ltc', 'eth'],
     getBalance: async (coin, address:string) => {
       const blockchain = {btc: 'bitcoin', bch:'bitcoin-cash', ltc:'litecoin', eth:'ethereum'}[coin];
-      const url = `https://rest.cryptoapis.io/blockchain-data/${blockchain}/mainnet/addresses/${address}/balance`;
+      // Use new CryptoAPIs endpoint format (addresses-latest instead of blockchain-data)
+      const url = `https://rest.cryptoapis.io/addresses-latest/${coin === 'eth' ? 'evm' : 'utxo'}/${blockchain}/mainnet/${address}/balance`;
       const response = await axios.get(url, {headers: {'x-api-key': process.env.CRYPTOAPIS_APIE_KEY}});
       const amount = response.data?.data?.item?.confirmedBalance?.amount as string;
       if ( ! /^[0-9]+\.?[0-9]*$/.test(amount) ) {

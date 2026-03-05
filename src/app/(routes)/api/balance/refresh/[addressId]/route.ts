@@ -515,9 +515,9 @@ async function getBalanceWithDebug(
     };
   }
   
-  // CryptoAPIs for all coins
+  // CryptoAPIs for all coins (using new addresses-latest endpoint)
   const blockchain = { btc: 'bitcoin', bch: 'bitcoin-cash', ltc: 'litecoin', eth: 'ethereum' }[coin];
-  const url = `https://rest.cryptoapis.io/blockchain-data/${blockchain}/mainnet/addresses/${address}/balance`;
+  const url = `https://rest.cryptoapis.io/addresses-latest/${coin === 'eth' ? 'evm' : 'utxo'}/${blockchain}/mainnet/${address}/balance`;
   const headers = { 'x-api-key': process.env.CRYPTOAPIS_APIE_KEY || '(not set)' };
   const requestStart = Date.now();
   const response = await axios.get(url, { headers: { 'x-api-key': process.env.CRYPTOAPIS_APIE_KEY } });
