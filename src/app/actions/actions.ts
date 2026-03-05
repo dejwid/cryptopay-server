@@ -293,6 +293,20 @@ export async function sendAccessLinkAction(formData:FormData) {
 }
 
 /**
+ * Send a test email to verify email functionality.
+ */
+export async function sendTestEmailAction(targetEmail: string) {
+  const userEmail = await userEmailOrThrow();
+  const timestamp = new Date().toISOString();
+  await sendEmail(
+    [targetEmail],
+    'CryptoPay Server - Test Email',
+    `This is a test email from CryptoPay Server.\n\nSent at: ${timestamp}\n\nIf you received this email, your email configuration is working correctly!`
+  );
+  return { success: true, sentTo: targetEmail, timestamp };
+}
+
+/**
  * Manually approve an invoice payment that was below the threshold.
  * This allows the merchant to mark an underpaid invoice as paid and deliver the product.
  */
