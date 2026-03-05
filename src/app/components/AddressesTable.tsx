@@ -1,10 +1,9 @@
 'use client';
 
-import BalanceRefresh from "@/app/components/BalanceRefresh";
 import type {CoinCode, CryptoPrices} from "@/libs/cryptoPrices";
 import {prettyDate} from "@/libs/dates";
 import {Address} from "@prisma/client";
-import {IconButton, Table} from "@radix-ui/themes";
+import {Badge, Table} from "@radix-ui/themes";
 import Link from "next/link";
 
 export default function AddressesTable({addresses,cryptoPrices}:{addresses:Address[],cryptoPrices:CryptoPrices}) {
@@ -17,7 +16,7 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
             <Table.Row>
               <Table.ColumnHeaderCell>Address</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Balance</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Busy</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Added</Table.ColumnHeaderCell>
             </Table.Row>
           </Table.Header>
@@ -25,38 +24,32 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
             {addresses.map((address) => {
               const cryptoAmount = (address.lastBalance10pow10||0) / 10**10;
               const usdAmount = cryptoAmount === 0 ? 0 : cryptoAmount * cryptoPrices?.[address.code as CoinCode];
+              const isBusy = address.busyTo && new Date(address.busyTo) > new Date();
               return (
                 <Table.Row key={address.id}>
                   <Table.Cell>
                     <Link 
                       href={`/addresses/${address.id}`}
-                      className="block max-w-xs truncate text-blue-600 hover:underline" 
-                      title={address.address}
+                      className="text-blue-600 hover:underline font-mono text-sm" 
                     >
-                      {address.address}
+                      {address.address.slice(0, 8)}...{address.address.slice(-6)}
                     </Link>
-                    <div className="text-xs text-gray-500">{address.privateKey}</div>
+                    <Badge size="1" color="blue" className="ml-2">{address.code.toUpperCase()}</Badge>
                   </Table.Cell>
                   <Table.Cell>
-                    <div className="flex gap-2 items-center">
-                      <div>
-                        {cryptoAmount}&nbsp;{address.code.toUpperCase()}<br />
-                        {usdAmount === 0 ? 0 : '~'+usdAmount.toFixed(4)}&nbsp;USD
-                        <div className="text-xs text-gray-600">
-                          {address.balanceUpdatedAt ? prettyDate(address.balanceUpdatedAt) : ''}
-                        </div>
-                      </div>
-                      <div>
-                        <BalanceRefresh
-                          addressId={address.id}
-                          address={address.address}
-                          code={address.code}
-                        />
-                      </div>
+                    <div className="font-medium">{cryptoAmount} {address.code.toUpperCase()}</div>
+                    <div className="text-xs text-gray-500">
+                      {usdAmount === 0 ? 0 : '~'+usdAmount.toFixed(2)} USD
                     </div>
                   </Table.Cell>
-                  <Table.Cell>{address.busyTo ? prettyDate(address.busyTo) : '-'}</Table.Cell>
-                  <Table.Cell>{prettyDate(address?.createdAt)}</Table.Cell>
+                  <Table.Cell>
+                    {isBusy ? (
+                      <Badge color="orange">Busy</Badge>
+                    ) : (
+                      <Badge color="green">Available</Badge>
+                    )}
+                  </Table.Cell>
+                  <Table.Cell className="text-gray-500">{prettyDate(address?.createdAt)}</Table.Cell>
                 </Table.Row>
               );
             })}
@@ -69,6 +62,7 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
         {addresses.map((address) => {
           const cryptoAmount = (address.lastBalance10pow10||0) / 10**10;
           const usdAmount = cryptoAmount === 0 ? 0 : cryptoAmount * cryptoPrices?.[address.code as CoinCode];
+          const isBusy = address.busyTo && new Date(address.busyTo) > new Date();
           return (
             <Link 
               key={address.id} 
@@ -77,47 +71,33 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1 min-w-0">
-                  <div className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium mb-2">
-                    {address.code.toUpperCase()}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge size="1" color="blue">{address.code.toUpperCase()}</Badge>
+                    {isBusy ? (
+                      <Badge color="orange">Busy</Badge>
+                    ) : (
+                      <Badge color="green">Available</Badge>
+                    )}
                   </div>
-                  <div className="font-mono text-sm break-all">
-                    {address.address}
+                  <div className="font-mono text-sm truncate">
+                    {address.address.slice(0, 12)}...{address.address.slice(-8)}
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mb-3">
+              <div className="flex justify-between items-center">
                 <div>
                   <div className="font-semibold">
                     {cryptoAmount} {address.code.toUpperCase()}
                   </div>
-                  <div className="text-gray-600">
-                    {usdAmount === 0 ? 0 : '~'+usdAmount.toFixed(4)} USD
+                  <div className="text-gray-600 text-sm">
+                    {usdAmount === 0 ? 0 : '~'+usdAmount.toFixed(2)} USD
                   </div>
                 </div>
-                <BalanceRefresh
-                  addressId={address.id}
-                  address={address.address}
-                  code={address.code}
-                />
-              </div>
-
-              <div className="flex justify-between text-sm text-gray-500 pt-3 border-t">
-                <div>
-                  <span className="text-gray-400">Busy: </span>
-                  {address.busyTo ? prettyDate(address.busyTo) : '-'}
-                </div>
-                <div>
-                  <span className="text-gray-400">Added: </span>
+                <div className="text-sm text-gray-500">
                   {prettyDate(address?.createdAt)}
                 </div>
               </div>
-
-              {address.balanceUpdatedAt && (
-                <div className="text-xs text-gray-400 mt-2">
-                  Balance updated: {prettyDate(address.balanceUpdatedAt)}
-                </div>
-              )}
             </Link>
           );
         })}

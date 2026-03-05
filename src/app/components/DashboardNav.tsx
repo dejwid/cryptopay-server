@@ -80,14 +80,18 @@ export default function DashboardNav(){
               {links.map(l => {
                 const active = l.href=='/' ? path === '/' : path.includes(l.href);
                 return (
-                <Link
-                  href={l.href}
-                  key={l.label}
-                  className={"flex gap-3 items-center px-6 py-3 hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors dark:text-gray-300"}
-                  style={active?{backgroundColor:'var(--accent-9)',color:'white'}:{}}
-                  onClick={() => setIsOpen(false)}
-                >
-              </Link>
+                  <Link
+                    href={l.href}
+                    key={l.label}
+                    className={"flex gap-3 items-center px-6 py-3 hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors dark:text-gray-300"}
+                    style={active?{backgroundColor:'var(--accent-9)',color:'white'}:{}}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {l.icon}
+                    <span>{l.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}

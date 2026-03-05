@@ -2,12 +2,10 @@
 
 import {prettyDate} from "@/libs/dates";
 import {Invoice} from "@prisma/client";
-import {Button, Table, Text} from "@radix-ui/themes";
-import {ClockIcon, Pen, ShareIcon, MoreVertical} from "lucide-react";
+import {Table, Text} from "@radix-ui/themes";
+import {ClockIcon} from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import ManuallyApproveInvoiceButton from "./ManuallyApproveInvoiceButton";
-import {InvoiceWithPaymentStatus} from "./DashboardInvoices";
 import {PaymentStatusBadge} from "./PaymentStatusBadge";
 
 interface InvoiceWithExtras extends Invoice {
@@ -19,38 +17,41 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
   return (
     <>
       {/* Desktop Table View */}
-      <div className="hidden lg:block">
+      <div className="hidden md:block">
         <Table.Root>
           <Table.Header>
             <Table.Row>
-              <Table.ColumnHeaderCell>Name / Payer</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Title</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Amount</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Payment Status</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Created / Paid</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell></Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Created</Table.ColumnHeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {invoices.map(invoice => (
               <Table.Row key={invoice.id}>
                 <Table.Cell>
-                  {invoice.title}<br />
-                  {invoice.payerEmail}
-                </Table.Cell>
-                <Table.Cell>
-                  {!!invoice.coinAmount10pow10 && invoice.coinAmount10pow10/10**10} {(invoice.coinCode||'').toUpperCase()}<br />
-                  {invoice.usdAmountCents/100} USD
-                </Table.Cell>
-                <Table.Cell>
-                  <Link href={`/invoices/${invoice.id}`} className="hover:opacity-80 transition-opacity block">
-                    <PaymentStatusBadge
-                      paidAt={invoice.paidAt}
-                      manuallyApprovedAt={invoice.manuallyApprovedAt}
-                      receivedAmount10pow10={invoice.receivedAmount10pow10}
-                      paymentPercentage={invoice.paymentPercentage}
-                      coinCode={invoice.coinCode}
-                    />
+                  <Link href={`/invoices/${invoice.id}`} className="text-blue-600 hover:underline font-medium">
+                    {invoice.title}
                   </Link>
+                  <div className="text-xs text-gray-500">{invoice.payerEmail}</div>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="font-medium">{invoice.usdAmountCents/100} USD</div>
+                  {invoice.coinAmount10pow10 && (
+                    <div className="text-xs text-gray-500">
+                      {invoice.coinAmount10pow10/10**10} {(invoice.coinCode||'').toUpperCase()}
+                    </div>
+                  )}
+                </Table.Cell>
+                <Table.Cell>
+                  <PaymentStatusBadge
+                    paidAt={invoice.paidAt}
+                    manuallyApprovedAt={invoice.manuallyApprovedAt}
+                    receivedAmount10pow10={invoice.receivedAmount10pow10}
+                    paymentPercentage={invoice.paymentPercentage}
+                    coinCode={invoice.coinCode}
+                  />
                 </Table.Cell>
                 <Table.Cell>
                   <div className="flex gap-1 items-center text-gray-600">
@@ -58,30 +59,10 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
                     {prettyDate(invoice.createdAt)}
                   </div>
                   {invoice.paidAt && (
-                    <Text color="green" className="text-sm">
+                    <Text color="green" className="text-xs">
                       Paid: {prettyDate(invoice.paidAt)}
                     </Text>
                   )}
-                </Table.Cell>
-                <Table.Cell>
-                  <div className="flex gap-1">
-                    {!invoice.paidAt && (
-                      <ManuallyApproveInvoiceButton
-                        invoiceId={invoice.id}
-                        invoiceTitle={invoice.title}
-                      />
-                    )}
-                    <Link href={'/invoices/edit/'+invoice.id}>
-                      <Button variant="surface" size="1">
-                        <Pen className="h-4" />Edit
-                      </Button>
-                    </Link>
-                    <Link href={'/invoice/'+invoice.id}>
-                      <Button variant="surface" size="1">
-                        <ShareIcon className="h-4" />Pay
-                      </Button>
-                    </Link>
-                  </div>
                 </Table.Cell>
               </Table.Row>
             ))}
@@ -90,7 +71,7 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
       </div>
 
       {/* Mobile Card View */}
-      <div className="lg:hidden space-y-3">
+      <div className="md:hidden space-y-3">
         {invoices.map(invoice => (
           <Link 
             key={invoice.id} 
@@ -116,14 +97,16 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm mb-3">
               <div>
                 <span className="text-gray-500">Amount:</span>{' '}
-                <span className="font-medium">
-                  {!!invoice.coinAmount10pow10 && invoice.coinAmount10pow10/10**10} {(invoice.coinCode||'').toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-500">USD:</span>{' '}
                 <span className="font-medium">{invoice.usdAmountCents/100} USD</span>
               </div>
+              {invoice.coinAmount10pow10 && (
+                <div>
+                  <span className="text-gray-500">Crypto:</span>{' '}
+                  <span className="font-medium">
+                    {invoice.coinAmount10pow10/10**10} {(invoice.coinCode||'').toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between text-sm text-gray-500">
@@ -137,25 +120,6 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
                 </Text>
               )}
             </div>
-
-            {!invoice.paidAt && (
-              <div className="mt-3 pt-3 border-t flex gap-2" onClick={(e) => e.preventDefault()}>
-                <ManuallyApproveInvoiceButton
-                  invoiceId={invoice.id}
-                  invoiceTitle={invoice.title}
-                />
-                <Link href={'/invoices/edit/'+invoice.id} className="flex-1">
-                  <Button variant="surface" size="1" className="w-full">
-                    <Pen className="h-4" />Edit
-                  </Button>
-                </Link>
-                <Link href={'/invoice/'+invoice.id} className="flex-1">
-                  <Button variant="surface" size="1" className="w-full">
-                    <ShareIcon className="h-4" />Pay
-                  </Button>
-                </Link>
-              </div>
-            )}
           </Link>
         ))}
         {invoices.length === 0 && (

@@ -2,7 +2,7 @@ import { userEmailOrThrow } from "@/app/actions/actions";
 import { prisma } from "@/libs/db";
 import { notFound } from "next/navigation";
 import { Box, Card, Flex, Heading, Table, Text, Badge, Separator } from "@radix-ui/themes";
-import { ClockIcon, ArrowLeftIcon, CheckCircle2Icon, XCircleIcon } from "lucide-react";
+import { ClockIcon, ArrowLeftIcon, CheckCircle2Icon, XCircleIcon, PenIcon, ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@radix-ui/themes";
 import { prettyDate } from "@/libs/dates";
@@ -209,14 +209,30 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
             )}
           </div>
           
-          {!invoice.paidAt && (
-            <Box mt="4">
-              <ManuallyApproveInvoiceButton
-                invoiceId={invoice.id}
-                invoiceTitle={invoice.title}
-              />
-            </Box>
-          )}
+          <Box mt="4">
+            <Flex gap="2" wrap="wrap">
+              {!invoice.paidAt && (
+                <>
+                  <ManuallyApproveInvoiceButton
+                    invoiceId={invoice.id}
+                    invoiceTitle={invoice.title}
+                  />
+                  <Link href={'/invoices/edit/'+invoice.id}>
+                    <Button variant="outline" size="1">
+                      <PenIcon className="w-4 h-4" />
+                      Edit
+                    </Button>
+                  </Link>
+                </>
+              )}
+              <Link href={'/invoice/'+invoice.id} target="_blank">
+                <Button variant="surface" size="1">
+                  <ExternalLinkIcon className="w-4 h-4" />
+                  Pay Page
+                </Button>
+              </Link>
+            </Flex>
+          </Box>
         </Card>
         
         {/* Payment Details Card */}
