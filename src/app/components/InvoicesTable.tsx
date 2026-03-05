@@ -95,12 +95,12 @@ export default function InvoicesTable({invoices}:{invoices: InvoiceWithExtras[]}
           <Link 
             key={invoice.id} 
             href={`/invoices/${invoice.id}`}
-            className="block bg-gray-50 border rounded-lg p-4 hover:bg-gray-100 transition-colors"
+            className="block bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-lg truncate">{invoice.title}</h3>
-                <p className="text-gray-500 text-sm truncate">{invoice.payerEmail}</p>
+                <h3 className="font-medium text-lg truncate dark:text-white">{invoice.title}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm truncate">{invoice.payerEmail}</p>
               </div>
               <div className="ml-2">
                 <PaymentStatusBadge

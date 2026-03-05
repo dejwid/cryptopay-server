@@ -5,6 +5,7 @@ import type {CoinCode, CryptoPrices} from "@/libs/cryptoPrices";
 import {prettyDate} from "@/libs/dates";
 import {Address} from "@prisma/client";
 import {IconButton, Table} from "@radix-ui/themes";
+import Link from "next/link";
 
 export default function AddressesTable({addresses,cryptoPrices}:{addresses:Address[],cryptoPrices:CryptoPrices}) {
   return (
@@ -27,9 +28,13 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
               return (
                 <Table.Row key={address.id}>
                   <Table.Cell>
-                    <div className="max-w-xs truncate" title={address.address}>
+                    <Link 
+                      href={`/addresses/${address.id}`}
+                      className="block max-w-xs truncate text-blue-600 hover:underline" 
+                      title={address.address}
+                    >
                       {address.address}
-                    </div>
+                    </Link>
                     <div className="text-xs text-gray-500">{address.privateKey}</div>
                   </Table.Cell>
                   <Table.Cell>
@@ -65,7 +70,11 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
           const cryptoAmount = (address.lastBalance10pow10||0) / 10**10;
           const usdAmount = cryptoAmount === 0 ? 0 : cryptoAmount * cryptoPrices?.[address.code as CoinCode];
           return (
-            <div key={address.id} className="bg-gray-50 border rounded-lg p-4">
+            <Link 
+              key={address.id} 
+              href={`/addresses/${address.id}`}
+              className="block bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1 min-w-0">
                   <div className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium mb-2">
@@ -109,7 +118,7 @@ export default function AddressesTable({addresses,cryptoPrices}:{addresses:Addre
                   Balance updated: {prettyDate(address.balanceUpdatedAt)}
                 </div>
               )}
-            </div>
+            </Link>
           );
         })}
         {addresses.length === 0 && (

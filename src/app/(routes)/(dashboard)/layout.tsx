@@ -1,5 +1,6 @@
 import DashboardNav from "@/app/components/DashboardNav";
 import Login from "@/app/components/Login";
+import ThemeToggle from "@/app/components/ThemeToggle";
 import {auth, signOut} from "@/auth";
 import {Theme} from "@radix-ui/themes";
 import type { Metadata } from "next";
@@ -22,37 +23,40 @@ export default async function RootLayout({
   const session = await auth();
   const userAllowed = session && session.user && session.user.email === 'dawid.paszko@gmail.com';
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Theme accentColor="blue">
-          <div className="min-h-screen">
+        <Theme accentColor="blue" hasBackground={false}>
+          <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors">
             {session && userAllowed && (
-              <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
+              <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors">
                 <DashboardNav/>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <ThemeToggle />
+                </div>
               </header>
             )}
             <main className="container px-4 py-4 md:py-8">
               {(session && userAllowed) && (
-                <div className="p-3 md:p-6 border shadow rounded-lg bg-white">
+                <div className="p-3 md:p-6 border border-gray-200 dark:border-gray-800 shadow rounded-lg bg-white dark:bg-gray-900 transition-colors">
                   {children}
                 </div>
               )}
               {(session && !userAllowed) && (
                 <div className="max-w-2xl mx-auto px-4">
-                  <h1 className="text-2xl mb-4">Hey there! 🎉</h1>
-                  <p className="mb-2">Thanks for trying to log in!<br/>However, it looks like this app was set up for a specific Google
+                  <h1 className="text-2xl mb-4 dark:text-white">Hey there! 🎉</h1>
+                  <p className="mb-2 dark:text-gray-300">Thanks for trying to log in!<br/>However, it looks like this app was set up for a specific Google
                     account.</p>
-                  <p>If you think you should have access or have any questions,<br/>feel free to reach out to me!
+                  <p className="dark:text-gray-300">If you think you should have access or have any questions,<br/>feel free to reach out to me!
                     <a
                       href="mailto:dawid.paszko@gmail.com?subject=Regarding cryptopay server"
-                      className="text-blue-600 ml-1 border-b border-blue-600/40">dawid.paszko@gmail.com</a>
+                      className="text-blue-600 dark:text-blue-400 ml-1 border-b border-blue-600/40 dark:border-blue-400/40">dawid.paszko@gmail.com</a>
                   </p>
-                  <div className="border-t mt-4 pt-4">
+                  <div className="border-t dark:border-gray-700 mt-4 pt-4">
                     <form action={async () => {
                       'use server';
                       await signOut();
                     }}>
-                      <button className="bg-gray-200 px-4 py-2 rounded-md cursor-pointer">
+                      <button className="bg-gray-200 dark:bg-gray-700 dark:text-white px-4 py-2 rounded-md cursor-pointer">
                         Logout
                       </button>
                     </form>

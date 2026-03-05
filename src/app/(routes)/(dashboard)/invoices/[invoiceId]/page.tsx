@@ -114,9 +114,15 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
                   <Table.Cell className="break-all">{invoice.payerEmail || '-'}</Table.Cell>
                 </Table.Row>
                 <Table.Row>
-                  <Table.Cell className="text-gray-500">Product</Table.Cell>
-                  <Table.Cell>{product?.name || '-'}</Table.Cell>
-                </Table.Row>
+                   <Table.Cell className="text-gray-500">Product</Table.Cell>
+                   <Table.Cell>
+                     {product ? (
+                       <Link href={`/products/${product.id}`} className="text-blue-600 hover:underline">
+                         {product.name}
+                       </Link>
+                     ) : '-'}
+                   </Table.Cell>
+                 </Table.Row>
                 <Table.Row>
                   <Table.Cell className="text-gray-500">USD Amount</Table.Cell>
                   <Table.Cell>${(invoice.usdAmountCents / 100).toFixed(2)}</Table.Cell>
@@ -167,9 +173,15 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
               <span className="text-right break-all max-w-[60%]">{invoice.payerEmail || '-'}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-500">Product</span>
-              <span>{product?.name || '-'}</span>
-            </div>
+               <span className="text-gray-500">Product</span>
+               {product ? (
+                 <Link href={`/products/${product.id}`} className="text-blue-600 hover:underline">
+                   {product.name}
+                 </Link>
+               ) : (
+                 <span>-</span>
+               )}
+             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-500">USD Amount</span>
               <span className="font-medium">${(invoice.usdAmountCents / 100).toFixed(2)}</span>
@@ -214,15 +226,20 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
           {address ? (
             <>
               {/* Desktop Table View */}
-              <div className="hidden sm:block">
-                <Table.Root>
-                  <Table.Body>
-                    <Table.Row>
-                      <Table.Cell className="text-gray-500">Payment Address</Table.Cell>
-                      <Table.Cell className="font-mono text-xs break-all">
-                        {address.address}
-                      </Table.Cell>
-                    </Table.Row>
+               <div className="hidden sm:block">
+                 <Table.Root>
+                   <Table.Body>
+                     <Table.Row>
+                       <Table.Cell className="text-gray-500">Payment Address</Table.Cell>
+                       <Table.Cell>
+                        <Link 
+                          href={`/addresses/${address.id}`}
+                          className="font-mono text-xs break-all text-blue-600 hover:underline"
+                        >
+                          {address.address}
+                        </Link>
+                       </Table.Cell>
+                     </Table.Row>
                     <Table.Row>
                       <Table.Cell className="text-gray-500">Address Assigned</Table.Cell>
                       <Table.Cell>
@@ -266,13 +283,16 @@ export default async function InvoiceDetailPage({ params }: { params: { invoiceI
               </div>
 
               {/* Mobile List View */}
-              <div className="sm:hidden space-y-3">
-                <div className="py-2 border-b">
-                  <div className="text-gray-500 mb-1">Payment Address</div>
-                  <div className="font-mono text-xs break-all">
-                    {address.address}
-                  </div>
-                </div>
+               <div className="sm:hidden space-y-3">
+                 <div className="py-2 border-b">
+                   <div className="text-gray-500 mb-1">Payment Address</div>
+                   <Link 
+                     href={`/addresses/${address.id}`}
+                     className="font-mono text-xs break-all text-blue-600 hover:underline"
+                   >
+                     {address.address}
+                   </Link>
+                 </div>
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="text-gray-500">Address Assigned</span>
                   <span>{address.busyFrom ? prettyDate(address.busyFrom) : '-'}</span>
