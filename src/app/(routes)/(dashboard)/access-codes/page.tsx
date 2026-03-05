@@ -8,38 +8,37 @@ import { prettyDate } from "@/libs/dates";
 export default async function AccessCodesPage() {
   const email = await userEmailOrThrow();
   
-  // Get all access codes with product info
+  // Get all products for this user
+  const products = await prisma.product.findMany({
+    where: { userEmail: email },
+    orderBy: { name: 'asc' },
+  });
+  const productIds = products.map(p => p.id);
+  
+  // Get all access codes for these products
   const accessCodes = await prisma.productAccessCode.findMany({
     where: {
-      product: {
-        userEmail: email
-      }
-    },
-    include: {
-      product: true
+      productId: { in: productIds }
     },
     orderBy: { createdAt: 'desc' }
   });
   
-  // Get all products for filtering
-  const products = await prisma.product.findMany({
-    where: { userEmail: email, archivedAt: null },
-    orderBy: { name: 'asc' },
-    select: { id: true, name: true }
-  });
+  // Create a product map for quick lookup
+  const productMap = new Map(products.map(p => [p.id, p]));
   
   // Group by product
   const byProduct = accessCodes.reduce((acc, code) => {
     const productId = code.productId;
+    const product = productMap.get(productId);
     if (!acc[productId]) {
       acc[productId] = {
-        product: code.product,
+        product: product,
         codes: []
       };
     }
     acc[productId].codes.push(code);
     return acc;
-  }, {} as Record<string, { product: typeof accessCodes[0]['product']; codes: typeof accessCodes }>);
+  }, {} as Record<string, { product: typeof products[0] | undefined; codes: typeof accessCodes }>);
   
   return (
     <Box>

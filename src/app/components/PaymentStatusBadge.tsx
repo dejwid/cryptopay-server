@@ -9,8 +9,8 @@ const maxAcceptablePercentage = (1 + maxPaymentShortfall) * 100; // 110%
 interface PaymentStatusBadgeProps {
   paidAt: Date | null;
   manuallyApprovedAt?: Date | null;
-  receivedAmount10pow10: number | null;
-  paymentPercentage: number | null;
+  receivedAmount10pow10?: number | null;
+  paymentPercentage?: number | null;
   coinCode?: string | null;
 }
 
@@ -27,7 +27,7 @@ export function PaymentStatusBadge({ paidAt, manuallyApprovedAt, receivedAmount1
     );
   }
   
-  if (receivedAmount10pow10 !== null && receivedAmount10pow10 > 0) {
+  if (receivedAmount10pow10 !== undefined && receivedAmount10pow10 !== null && receivedAmount10pow10 > 0) {
     return (
       <div className="flex flex-col gap-1">
         {paymentPercentage! > maxAcceptablePercentage ? (
